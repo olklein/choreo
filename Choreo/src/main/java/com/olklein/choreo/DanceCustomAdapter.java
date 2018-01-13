@@ -20,16 +20,40 @@ import android.widget.TextView;
 import java.io.File;
 
 /**
- * Created by olklein on 15/07/2016.
+ * Created by olklein on 06/07/2017.
+ *
+ *
+ *    This program is free software: you can redistribute it and/or  modify
+ *    it under the terms of the GNU Affero General Public License, version 3,
+ *    as published by the Free Software Foundation.
+ *
+ *    This program is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *    GNU Affero General Public License for more details.
+ *
+ *    You should have received a copy of the GNU Affero General Public License
+ *    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ *    As a special exception, the copyright holders give permission to link the
+ *    code of portions of this program with the OpenSSL library under certain
+ *    conditions as described in each individual source file and distribute
+ *    linked combinations including the program with the OpenSSL library. You
+ *    must comply with the GNU Affero General Public License in all respects
+ *    for all of the code used other than as permitted herein. If you modify
+ *    file(s) with this exception, you may extend this exception to your
+ *    version of the file(s), but you are not obligated to do so. If you do not
+ *    wish to do so, delete this exception statement from your version. If you
+ *    delete this exception statement from all source files in the program,
+ *    then also delete it in the license file.
  */
+
 class DanceCustomAdapter extends ArrayAdapter<String> {
 
     private String[] listOfDance;
-    //private final Context context;
     private final LayoutInflater inflator;
     private int checked;
     static final private String TAG ="DANCE";
-
 
     public DanceCustomAdapter(Context context, int resource, String[] listOfDance) {
         super(context, resource, listOfDance);
@@ -78,8 +102,6 @@ class DanceCustomAdapter extends ArrayAdapter<String> {
         params.setMargins(10,0,0,0);
         holder.textViewName.setLayoutParams(params);
 
-
-
         holder.deleteButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -105,7 +127,6 @@ class DanceCustomAdapter extends ArrayAdapter<String> {
                                 DanceCustomAdapter danceListAdapter = new DanceCustomAdapter(context, R.layout.dance_custom_list, ChoreographerConstants.DANCE_LIST_FILENAME);
                                 ListView drawerList = (ListView) MainActivity.context.findViewById(R.id.left_drawer);
                                 drawerList.setAdapter(danceListAdapter);
-                                //MainActivity.mDrawerList.setAdapter(MainActivity.danceListAdapter);
                                 MainActivity.doSelectItem(0);
                                 danceListAdapter.setClicked(0);
                             }
@@ -129,7 +150,6 @@ class DanceCustomAdapter extends ArrayAdapter<String> {
             @Override
             public void onClick(View v) {
                 Log.d(TAG, "Clicked"+position);
-                //LinearLayout row = (LinearLayout) v.getParent();
                 if (position<ChoreographerConstants.DANCE_LIST_NAME.length) {
                     MainActivity.setCurrentItem(position);
                     MainActivity.doSelectItem(MainActivity.currentItem);
@@ -150,6 +170,5 @@ class DanceCustomAdapter extends ArrayAdapter<String> {
         checked = position;
         // Notify that some data has been changed
         notifyDataSetChanged();
-
     }
 }

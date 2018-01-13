@@ -89,4 +89,10 @@
     <string name="mail_text">Enclosed a choreo.</string>
     <string name="mail_subjet">Choreo ("%s")</string>
     <string name="UseThisIconToCreateNewChoreo">To create a new choreography</string>
+    <string name="action_saveaspdf">Download as pdf</string>
+    <string name="pdf_file_uploaded">New "%s.pdf" file available</string>
+    <string name="pdf_file_uploading">Preparing "%s.pdf" file</string>
+    <string name="action_Licence_Logiciel">Software License</string>
+    <string name="action_Licence_Logiciel_Info">This program is distributed under the terms of the GNU Affero General Public License, version 3, as published by the Free Software Foundation. It can be found at: &#13; https://github.com/olklein/choreo.</string>
+    <string name="title_About">About</string>
 </resources>

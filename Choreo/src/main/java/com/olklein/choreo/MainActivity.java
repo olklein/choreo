@@ -1,18 +1,32 @@
-/*
-  Copyright 2014 Magnus Woxblom
-
-  Licensed under the Apache License, Version 2.0 (the "License");
-  you may not use this file except in compliance with the License.
-  You may obtain a copy of the License at
-
-     http://www.apache.org/licenses/LICENSE-2.0
-
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
+/**
+ * Created by olklein on 06/07/2017.
+ *
+ *
+ *    This program is free software: you can redistribute it and/or  modify
+ *    it under the terms of the GNU Affero General Public License, version 3,
+ *    as published by the Free Software Foundation.
+ *
+ *    This program is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *    GNU Affero General Public License for more details.
+ *
+ *    You should have received a copy of the GNU Affero General Public License
+ *    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ *    As a special exception, the copyright holders give permission to link the
+ *    code of portions of this program with the OpenSSL library under certain
+ *    conditions as described in each individual source file and distribute
+ *    linked combinations including the program with the OpenSSL library. You
+ *    must comply with the GNU Affero General Public License in all respects
+ *    for all of the code used other than as permitted herein. If you modify
+ *    file(s) with this exception, you may extend this exception to your
+ *    version of the file(s), but you are not obligated to do so. If you do not
+ *    wish to do so, delete this exception statement from your version. If you
+ *    delete this exception statement from all source files in the program,
+ *    then also delete it in the license file.
  */
+
 
 package com.olklein.choreo;
 
@@ -55,7 +69,6 @@ public class MainActivity extends AppCompatActivity {
     public static int currentItem = 0;
     private static CharSequence mTitle;
 
-
     private DrawerLayout mDrawerLayout;
     private ListView mDrawerList;
 
@@ -95,14 +108,10 @@ public class MainActivity extends AppCompatActivity {
             Syllabus.init(this);
 
             if (mActionBar!= null) {
-                //mActionBar.setIcon(R.mipmap.ic_launcher);
                 mActionBar.setDisplayShowHomeEnabled(true);
-                //mActionBar.setLogo(R.mipmap.ic_launcher);
                 mActionBar.setDisplayUseLogoEnabled(true);
-                //mActionBar.setBackgroundDrawable(new ColorDrawable(getResources().getColor(R.color.app_color)));
                 mActionBar.setBackgroundDrawable(new ColorDrawable(ContextCompat.getColor(getApplicationContext(),R.color.app_color)));
 
-                //
                 mDrawerToggle = new ActionBarDrawerToggle(
                         this,                  /* host Activity */
                         mDrawerLayout,         /* DrawerLayout object */
@@ -113,7 +122,6 @@ public class MainActivity extends AppCompatActivity {
                     public void onDrawerClosed(View view) {
                         super.onDrawerClosed(view);
                         invalidateOptionsMenu();
-
                     }
 
                     /** Called when a drawer has settled in a completely open state. */
@@ -139,9 +147,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
-
-
-    //
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -169,11 +174,6 @@ public class MainActivity extends AppCompatActivity {
         mDrawerToggle.onConfigurationChanged(newConfig);
     }
 
-    //
-
-
-
-
     @TargetApi(23)
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
@@ -192,42 +192,6 @@ public class MainActivity extends AppCompatActivity {
                     mDrawerList.setAdapter(danceListAdapter);
                     // Set the list's click listener
                     mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
-//                    mDrawerList.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-//                        @Override
-//                        public boolean onItemLongClick(AdapterView<?> parent, View view, final int position, long id) {
-//
-//                            AlertDialog.Builder builder = new AlertDialog.Builder(context);
-//
-//                            builder.setPositiveButton(R.string.OK, new DialogInterface.OnClickListener() {
-//                                public void onClick(DialogInterface dialog, int id) {
-//                                    String filePath = context.getExternalFilesDir(null)+"/"+ChoreographerConstants.DANCE_LIST_FILENAME[position];
-//                                    File file = new File(filePath);
-//                                    boolean deleted = file.delete();
-//                                    Log.d(TAG,"Deleted="+(deleted?"true":"false"));
-//                                    ChoreographerConstants.init(context);
-//                                    DanceCustomAdapter danceListAdapter = new DanceCustomAdapter(context, R.layout.dance_custom_list, ChoreographerConstants.DANCE_LIST_FILENAME);
-//
-//                                    ListView drawerList = (ListView) findViewById(R.id.left_drawer);
-//                                    //MainActivity.mDrawerList.setAdapter(MainActivity.danceListAdapter);
-//                                    drawerList.setAdapter(danceListAdapter);
-//                                    danceListAdapter.setClicked(0);
-//                                    selectItem(0);
-//                                }
-//                            })
-//                                    .setNegativeButton(R.string.cancel,
-//                                            new DialogInterface.OnClickListener() {
-//                                                public void onClick(DialogInterface dialog, int id) {
-//                                                    // User cancelled the dialog
-//                                                }
-//                                            });
-//                            // Create the AlertDialog object and return it
-//                            builder.setTitle(R.string.deletethefile);
-//                            builder.setIcon(R.mipmap.ic_launcher);
-//                            builder.create();
-//                            builder.show();
-//                            return false;
-//                        }
-//                    });
                     selectItem(currentItem);
                     setTitle(ChoreographerConstants.DANCE_LIST_FILENAME[currentItem]);
                     Syllabus.init(this);
@@ -242,8 +206,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
             break;
-            // other 'case' lines to check for other
-            // permissions this app might request
         }
     }
 
@@ -293,15 +255,13 @@ public class MainActivity extends AppCompatActivity {
      */
     private static void selectItem(int position) {
 
-        // Create a new fragment and specify the planet to show based on position
+        // Create a new fragment
         final Fragment fragment = ListFragment.newInstance();
         //
         FloatingActionButton fab = (FloatingActionButton) context.findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                //Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                //       .setAction("Action", null).show();
                 ((ListFragment) fragment).onNewFileClick(context);
             }
         });
@@ -407,7 +367,6 @@ public class MainActivity extends AppCompatActivity {
 
             ListView drawerList = (ListView) MainActivity.this.findViewById(R.id.left_drawer);
 
-            //MainActivity.mDrawerList.setAdapter(MainActivity.danceListAdapter);
             drawerList.setAdapter(danceListAdapter);
             setCurrentItem(0);
             selectItem(0);
@@ -499,7 +458,6 @@ public class MainActivity extends AppCompatActivity {
             ChoreographerConstants.init(context);
             DanceCustomAdapter danceListAdapter = new DanceCustomAdapter(context, R.layout.dance_custom_list, ChoreographerConstants.DANCE_LIST_FILENAME);
             ListView drawerList = (ListView) MainActivity.context.findViewById(R.id.left_drawer);
-            //MainActivity.mDrawerList.setAdapter(MainActivity.danceListAdapter);
             drawerList.setAdapter(danceListAdapter);
 
             setCurrentItem(0);
@@ -507,5 +465,4 @@ public class MainActivity extends AppCompatActivity {
             MainActivity.this.finishAffinity();
         }
     }
-
 }

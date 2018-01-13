@@ -88,5 +88,13 @@
         android:id="@+id/action_view"
         android:title="@string/action_view"
         app:showAsAction="never"/>
+    <item
+        android:id="@+id/action_saveaspdf"
+        android:title="@string/action_saveaspdf"
+        app:showAsAction="never"/>
+    <item
+        android:id="@+id/nav_Licence_Logiciel"
+        android:title="@string/title_About"
+        app:showAsAction="never"/>
 
 </menu>

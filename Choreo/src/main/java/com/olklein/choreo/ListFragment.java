@@ -1,21 +1,35 @@
-/*
-  Copyright 2014 Magnus Woxblom
-  <p/>
-  Licensed under the Apache License, Version 2.0 (the "License");
-  you may not use this file except in compliance with the License.
-  You may obtain a copy of the License at
-  <p/>
-  http://www.apache.org/licenses/LICENSE-2.0
-  <p/>
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
- */
-
 package com.olklein.choreo;
 
+/**
+ * Created by olklein on 06/07/2017.
+ *
+ *
+ *    This program is free software: you can redistribute it and/or  modify
+ *    it under the terms of the GNU Affero General Public License, version 3,
+ *    as published by the Free Software Foundation.
+ *
+ *    This program is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *    GNU Affero General Public License for more details.
+ *
+ *    You should have received a copy of the GNU Affero General Public License
+ *    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ *    As a special exception, the copyright holders give permission to link the
+ *    code of portions of this program with the OpenSSL library under certain
+ *    conditions as described in each individual source file and distribute
+ *    linked combinations including the program with the OpenSSL library. You
+ *    must comply with the GNU Affero General Public License in all respects
+ *    for all of the code used other than as permitted herein. If you modify
+ *    file(s) with this exception, you may extend this exception to your
+ *    version of the file(s), but you are not obligated to do so. If you do not
+ *    wish to do so, delete this exception statement from your version. If you
+ *    delete this exception statement from all source files in the program,
+ *    then also delete it in the license file.
+ */
+
+import android.app.NotificationManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -24,6 +38,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.OpenableColumns;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -31,6 +46,7 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.app.NotificationCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.text.Editable;
 import android.text.InputFilter;
@@ -48,7 +64,6 @@ import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
 import android.widget.ListView;
-import android.widget.TextView;
 
 import com.woxthebox.draglistview.DragListView;
 import com.woxthebox.draglistview.swipe.ListSwipeHelper;
@@ -179,7 +194,6 @@ public class ListFragment extends Fragment {
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
         inflater.inflate(R.menu.menu_list, menu);
-
     }
 
 
@@ -196,6 +210,7 @@ public class ListFragment extends Fragment {
             menu.findItem(R.id.action_add_figure).setVisible(false);
             menu.findItem(R.id.action_restore).setVisible(false);
             menu.findItem(R.id.action_save).setVisible(false);
+            menu.findItem(R.id.action_saveaspdf).setVisible(false);
             menu.findItem(R.id.action_export).setVisible(false);
             menu.findItem(R.id.action_import).setVisible(false);
             menu.findItem(R.id.action_show_syllabus).setVisible(false);
@@ -217,6 +232,7 @@ public class ListFragment extends Fragment {
                     menu.findItem(R.id.action_restore).setVisible(false);
                     menu.findItem(R.id.action_view).setVisible(false);
                     menu.findItem(R.id.action_save).setVisible(false);
+                    menu.findItem(R.id.action_saveaspdf).setVisible(false);
                     menu.findItem(R.id.action_export).setVisible(false);
                     menu.findItem(R.id.action_new).setVisible(true);
                 }else{
@@ -226,6 +242,7 @@ public class ListFragment extends Fragment {
                     menu.findItem(R.id.action_restore).setVisible(true);
                     menu.findItem(R.id.action_view).setVisible(true);
                     menu.findItem(R.id.action_save).setVisible(true);
+                    menu.findItem(R.id.action_saveaspdf).setVisible(true);
                     menu.findItem(R.id.action_export).setVisible(true);
                     menu.findItem(R.id.action_new).setVisible(false);
                 }
@@ -236,6 +253,7 @@ public class ListFragment extends Fragment {
                 menu.findItem(R.id.action_add_figure).setVisible(false);
                 menu.findItem(R.id.action_restore).setVisible(false);
                 menu.findItem(R.id.action_save).setVisible(true);
+                menu.findItem(R.id.action_saveaspdf).setVisible(true);
                 menu.findItem(R.id.action_export).setVisible(false);
                 menu.findItem(R.id.action_import).setVisible(false);
                 menu.findItem(R.id.action_new).setVisible(false);
@@ -264,13 +282,12 @@ public class ListFragment extends Fragment {
 
                 Uri fileURI;
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    File imagePath = new File(getContext().getExternalFilesDir(null), "");
-                    File newFile = new File(imagePath, dance_file+"onscreen");
-                    if (!newFile.exists())  newFile = new File(imagePath, dance_file);
+                    File path = new File(getContext().getExternalFilesDir(null), "");
+                    File newFile = new File(path, dance_file+"onscreen");
+                    if (!newFile.exists())  newFile = new File(path, dance_file);
                     fileURI= getUriForFile(getContext(), "com.olklein.choreo.fileProvider", newFile);
                     exportIntent.setDataAndType(fileURI,"text/plain");
                     exportIntent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_WRITE_URI_PERMISSION );
-                    //exportIntent.setData(fileURI);
                     startActivity(Intent.createChooser(exportIntent, resource.getString(R.string.action_view)));
 
                 }else {
@@ -280,8 +297,6 @@ public class ListFragment extends Fragment {
                     fileURI = Uri.fromFile(new File(filePath));
                     exportIntent.setDataAndType(fileURI,"text/plain");
                     exportIntent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_WRITE_URI_PERMISSION );
-//                    exportIntent.setType("text/plain");
-//                    exportIntent.setData(fileURI);
                     startActivity(Intent.createChooser(exportIntent, resource.getString(R.string.action_view)));
 
                 }
@@ -296,9 +311,9 @@ public class ListFragment extends Fragment {
 
                 Uri fileURI;
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    File imagePath = new File(getContext().getExternalFilesDir(null), "");
-                    File newFile = new File(imagePath, dance_file+"onscreen");
-                    if (!newFile.exists())  newFile = new File(imagePath, dance_file);
+                    File path = new File(getContext().getExternalFilesDir(null), "");
+                    File newFile = new File(path, dance_file+"onscreen");
+                    if (!newFile.exists())  newFile = new File(path, dance_file);
                     fileURI= getUriForFile(getContext(), "com.olklein.choreo.fileProvider", newFile);
                 }else {
                     String filePath = getActivity().getBaseContext().getExternalFilesDir(null)+"/"+dance_file+"onscreen";
@@ -573,6 +588,33 @@ public class ListFragment extends Fragment {
             }
 
             return true;
+            case R.id.action_saveaspdf:
+            {
+                final Context context = getContext();
+                try {
+                    saveAsPDFDance(dance_file);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+            }
+            return true;
+            case R.id.nav_Licence_Logiciel: {
+                final Context context = getContext();
+
+                android.app.AlertDialog.Builder quitDialog = new android.app.AlertDialog.Builder(context);
+                quitDialog.setTitle(R.string.action_Licence_Logiciel);
+                quitDialog.setMessage(R.string.action_Licence_Logiciel_Info);
+
+                quitDialog.setPositiveButton(R.string.OK, new android.content.DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface arg0, int arg1) {
+                    }
+                });
+                quitDialog.setIcon(R.mipmap.ic_launcher);
+                quitDialog.show();
+                return true;
+            }
             case R.id.action_add_figure: {
                 if (!dance_file.equals("")){
                     addFigure();
@@ -733,11 +775,7 @@ public class ListFragment extends Fragment {
         File[] files = dir.listFiles(new FilenameFilter() {
             @Override
             public boolean accept(File dir, String name) {
-                if (name.toLowerCase().equals(file.getName().toLowerCase())) {
-                    return true;
-                } else {
-                    return false;
-                }
+                return name.toLowerCase().equals(file.getName().toLowerCase());
             }
         });
         if (files!=null && files.length>0)
@@ -791,6 +829,45 @@ public class ListFragment extends Fragment {
         mDragListView.setCanDragHorizontally(false);
         mDragListView.setDragEnabled(true);
         mDragListView.setCustomDragItem(new MydragItem(getContext(), R.layout.list_figure_item));
+    }
+
+    private void saveAsPDFDance(String file) throws IOException {
+        String downloadPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath();
+        String filePath = downloadPath+"/"+file+".pdf";
+        saveDanceAsPDFFromPath(getContext(), file, filePath);
+    }
+
+    private static void saveDanceAsPDFFromPath(Context context, String headerTitle, String filePath) throws IOException {
+        Log.d(TAG, "saveAsPDF...");
+
+        FileOutputStream out = null;
+        try {
+            out = new FileOutputStream(filePath);
+        } catch (FileNotFoundException e1) {
+            e1.printStackTrace();
+        }
+
+        if (out != null) {
+            PDFCreator creator = new PDFCreator();
+            Resources resources = context.getResources();
+
+
+            creator.createPdf(context, filePath, headerTitle,listAdapter.isCommentEnabled(),resources.getDrawable(R.drawable.choreologo),mItemArray,out);
+
+            NotificationManager mNotifyManager;
+            NotificationCompat.Builder mBuilder;
+            mNotifyManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+
+
+            mBuilder = new NotificationCompat.Builder(context);
+            int color = resources.getColor(android.R.color.holo_blue_light);
+            mBuilder.setContentTitle(resources.getString(R.string.app_name))
+                    .setContentText(resources.getString(R.string.pdf_file_uploading,dance_file))
+                    .setSmallIcon(android.R.drawable.stat_sys_download)
+                    .setAutoCancel(false)
+                    .setColor(color);
+            mNotifyManager.notify(1234, mBuilder.build());
+        }
     }
 
     private void saveDance(String file) throws IOException {

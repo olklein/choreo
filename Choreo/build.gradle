@@ -7,8 +7,8 @@ android {
         applicationId "com.olklein.choreo"
         minSdkVersion 16
         targetSdkVersion 25
-        versionCode 9
-        versionName "1.3"
+        versionCode 10
+        versionName "2.0"
         vectorDrawables.useSupportLibrary = true
     }
     buildTypes {
@@ -28,5 +28,6 @@ dependencies {
     compile 'com.android.support:appcompat-v7:25.3.1'
     compile 'com.android.support:design:25.3.1'
     compile 'com.github.woxthebox:draglistview:1.5.0'
+    compile 'com.itextpdf:itextg:5.5.9'
     compile 'com.google.android.gms:play-services-appindexing:9.8.0'
 }

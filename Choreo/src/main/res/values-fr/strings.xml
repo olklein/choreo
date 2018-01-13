@@ -72,4 +72,10 @@
     <string name="mail_text">Ci-jointe une chorégraphie.</string>
     <string name="mail_subjet">Choreo ("%s")</string>
     <string name="UseThisIconToCreateNewChoreo">Créer une nouvelle chorégraphie</string>
+    <string name="action_saveaspdf">Sauver en pdf</string>
+    <string name="pdf_file_uploaded">Nouveau fichier "%s.pdf" disponible.</string>
+    <string name="pdf_file_uploading">Préparation du fichier "%s.pdf"</string>
+    <string name="action_Licence_Logiciel">Licence logiciel</string>
+    <string name="action_Licence_Logiciel_Info">Cette application est distribuée sous licence "Affero General Public License", version 3, publiée par la Free Software Foundation. Elle est disponible à l\'adresse suivante: &#13; https://github.com/olklein/choreo.</string>
+    <string name="title_About">A propos</string>
 </resources>
