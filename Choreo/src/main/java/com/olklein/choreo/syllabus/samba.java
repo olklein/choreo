@@ -1,0 +1,68 @@
+package com.olklein.choreo.syllabus;
+
+/**
+ * Created by olklein on 24/10/2017.
+ */
+
+public class samba {
+    public static final String[][] FIGURESTEMPOLIST = {
+            {"NATURAL BASIC MOVEMENT","SaS SaS","Start: RF fwd (Close Opp., Normal Hold)\nFinish: LF in place (Close Opp., Normal Hold)"},
+            {"REVERSE BASIC MOVEMENT","SaS SaS","Start: LF fwd (Close Opp., Normal Hold)\nFinish: RF in place (Close Opp., Normal Hold)"},
+            {"PROGRESSIVE BASIC MOVEMENT","SaS SaS","Start: RF fwd (Close Opp., Normal Hold)\nFinish: LF in place (Close Opp., Normal Hold)"},
+            {"SIDE BASIC MOVEMENT TO L","SaS","Start: LF to side (Close Opp., Normal Hold)\nFinish: LF in place (Close Opp., Normal Hold)"},
+            {"SIDE BASIC MOVEMENT TO R","SaS","Start: RF to side (Close Opp., Normal Hold)\nFinish: RF in place (Close Opp., Normal Hold)"},
+            {"OUTSIDE BASIC","SaS SaS SaS SaS","Start: RF fwd (Close Opp., Normal Hold)\nFinish: LF in place (Close Opp., Normal Hold)"},
+            {"SAMBA WHISK TO LEFT","SaS","Start: LF to side (Close Opp., Normal Hold)\nFinish: LF in place (Close Opp., Normal Hold)"},
+            {"SAMBA WHISK TO RIGHT","SaS","Start: RF to side (Close Opp., Normal Hold)\nFinish: RF in place (Close Opp., Normal Hold)"},
+            {"STATIONARY SAMBA WALKS","SaS SaS","Start: Instep of LF to T of RF (Open Opp., LH to RH and RH to LH Hold)\nFinish: RF slipped slightly bwd (Open Opp., LH to RH and RH to LH Hold, LH to RH Hold)"},
+            {"PROMENADE SAMBA WALKS","SaS SaS","Start: LF fwd (R Side Same, Promenade Hold)\nFinish: LF slipped bwd (R Side Same, Promenade Hold)"},
+            {"SIDE SAMBA WALK","SaS","Start: RF fwd (R Side Same, Promenade Hold)\nFinish: RF slipped leftwards (R Side Same, Promenade Hold)"},
+            {"REVERSE TURN","SaS SaS","Start: RF fwd (Close Opp., Normal Hold)\nFinish: RF closed to LF (Close Opp., Normal Hold)"},
+            {"PROMENADE TO COUNTER PROMENADE BOTAFOGOS","SaS SaS SaS","Start: LF fwd (Close Opp., Normal Hold)\nFinish: LF in place (R Side Same, Promenade Hold)"},
+            {"SIDE SAMBA CHASSE","QQQQ SS","Start: LF to side (Close Opp., Normal Hold)\nFinish: RF closed to LF (Close Opp., Normal Hold)"},
+            {"TRAVELLING BOTAFOGO FORWARD","SaS SaS SaS","Start: LF fwd (Close Opp., Normal Hold)\nFinish: LF in place (R Diag Opp., Normal Hold)"},
+            {"TRAVELLING BOTAFOGO BACKWARD TO PP","SaS SaS SaS SaS","Start: RF bwd (Close Opp., Normal Hold)\nFinish: LF in place (R Side Same, Promenade Hold)"},
+            {"CRISS CROSS BOTAFOGOS<br>(SHADOW BOTAFOGOS)","SaS SaS","Start: LF fwd (Ex. Open Prom, LH to RH Hold)\nFinish: RF in place (Ex Open Prom, LH to RH Hold)"},
+            {"CRISS CROSS VOLTAS TO RIGHT","SaSaSaS","Start: LF crossed in front of RF (Ex Open Prom, LH to RH Hold)\nFinish: Weight on L foot (Open Opp., LH to RH Hold)"},
+            {"CRISS CROSS VOLTAS TO LEFT","SaSaSaS","Start: RF crossed in front of LF (Ex Open Cnt Prom, LH to RH Hold)\nFinish: RF crossed in front of LF (Open Opp., LH to RH Hold)"},
+            {"TRAVELLING VOLTA TO RIGHT","SaS","Start: LF crossed in front of RF (Open Opp., Normal Hold)\nFinish: LF crossed in front of RF (Open Opp., Normal Hold)"},
+            {"TRAVELLING VOLTA TO LEFT","SaS","Start: RF crossed in front of LF (Open Opp., Normal Hold)\nFinish: RF crossed in front of LF (Open Opp., Normal Hold)"},
+            {"UNDERARM TURN TURNING RIGHT<br>(VOLTA SPOT TURN TO R FOR LADY)","SaS","Start: LF to side (Close Opp., Normal Hold)\nFinish: LF in place (Close Opp., Normal Hold)"},
+            {"UNDERARM TURN TURNING LEFT<br>(VOLTA SPOT TURN TO L FOR LADY)","SaS","Start: RF to side (Close Opp., Normal Hold)\nFinish: RF in place Close Opp., Normal Hold)"},
+            {"SOLO SPOT VOLTA TURNING LEFT","SaS","Start: LF to side (Close Opp., Normal Hold)\nFinish: LF in place (Close Opp., Normal Hold)"},
+            {"SOLO SPOT VOLTA TURNING RIGTH","SaS","Start: RF to side (Close Opp., Normal Hold)\nFinish: RF in place Close Opp., Normal Hold)"},
+            {"CONTINUOUS SOLO SPOT VOLTA TURNING LEFT","SaS","Start: LF to side (Close Opp., Normal Hold)\nFinish: LF in place (Close Opp., Normal Hold)"},
+            {"CONTINUOUS SOLO SPOT VOLTA TURNING RIGHT","SaS","Start: RF to side (Close Opp., Normal Hold)\nFinish: RF in place Close Opp., Normal Hold)"},
+            {"MAYPOLE - LADY TURNING RIGHT<br>(CONTINUOUS VOLTA SPOT TURN TO R)","SaSaSaS","Start: LF crossed in front of RF (Ex Open Prom, LH to RH Hold)\nFinish: LF crossed in front of RF (Open Opp., LH to RH Hold)"},
+            {"MAYPOLE - LADY TURNING LEFT<br>(CONTIUOUS VOLTA SPOT TURN TO L)","SaSaSaS","Start: RF crossed in front of LF (Ex Open Prom, LH to RH Hold)\nFinish: Weight on R foot (Open Opp., LH to RH Hold)"},
+            {"CRUZADOS WALKS","SS","Start: LF fwd (R Diag Same, w/o Hold)\nFinish: RF fwd (R Diag Same, w/o Hold)"},
+            {"CRUZADOS LOCKS","QQS QQS","Start: LF fwd (R Diag Same, w/o Hold)\nFinish: RF fwd (R Diag Same, w/o Hold)"},
+            {"CONTINUOUS CRUZADOS LOCKS","QQS QQS","Start: LF fwd (R Diag Same, w/o Hold)\nFinish: RF fwd (R Diag Same, w/o Hold)"},
+            {"DROPPED VOLTA","&S(S)","Start: LF fwd (R Side Same, Promenade Hold)\nFinish: RF crossed in front of LF (Close Opp., Normal Hold)"},
+            {"CIRCULAR VOLTAS TURNING RIGHT<br>(ROUNDABOUT TO RIGHT)","SaSaSaS","Start: RF crossed in front of LF (R Diag Opp., Normal Hold)\nFinish: RF in place (L Diag Opp., Normal Hold)"},
+            {"CIRCULAR VOLTAS TURNING LEFT<br>(ROUNDABOUT TO LEFT)","SaSaSaS","Start: LF crossed in front of RF (L Diag Opp., Normal Hold)\nFinish: LF in place (R Diag Opp., Normal Hold)"},
+            {"SOLO CIRCULAR VOLTAS TURNING R","SaSaSaS","Start: RF crossed in front of LF (R Diag Opp., Normal Hold)\nFinish: RF in place (L Diag Opp., Normal Hold)"},
+            {"SOLO CIRCULAR VOLTAS TURNING L","SaSaSaS","Start: LF crossed in front of RF (L Diag Opp., Normal Hold)\nFinish: LF in place (R Diag Opp., Normal Hold)"},
+            {"SAME FOOT BOTAFOGOS<br>(CONTRA BOTAFOGOS)","SaS SaS","Start: RF fwd OP on R side (R Diag Opp., LH to RH and RH to LH Hold)\nFinish: LF in place (R Diag Opp., LH to RH and RH to LH Hold)"},
+            {"SAMBA LOCKS LADY ON LEFT SIDE","QQS QQS QQS","Start: RF fwd (L Side Same, LH to RH Hold)\nFinish: RF fwd (L Side Same, LH to RH Hold)"},
+            {"SAMBA LOCKS LADY ON RIGHT SIDE","QQS QQS QQS","Start: LF fwd (R Side Same, RH to LH Hold)\nFinish: LF fwd (R Side Same, RH to LH Hold)"},
+            {"NATURAL ROLL","SQQ SQQ","Start: RF diag fwd (Close Opp., Normal Hold)\nFinish: LF closes to RF (Close Opp., Normal Hold)"},
+            {"REVERSE ROLL","SQQ SQQ","Start: LF diag fwd (Close Opp., Normal Hold)\nFinish: RF closed to LF (Close Opp., Normal Hold)"},
+            {"CLOSE ROCKS","SQQ SQQ","Start: RF fwd (Close Opp., Normal Hold)\nFinish: LF crossed behind RF (L Diag Opp., Normal Hold)"},
+            {"OPEN ROCKS","SQQ SQQ SQQ","Start: RF Fwd (Close Opp., Normal Hold)\nFinish: RFcrossed behind LF (R Diag R Angle, Release LH Hold)"},
+            {"BACKWARD ROCKS","SQQ SQQ","Start: RF bwd (Close Opp., Normal Hold)\nFinish: LF in Place (Close Opp., Normal Hold)"},
+            {"PLAIT","SS QQS","Start: LF bwd, small step, LK bent, RK straight) (Open Opp., LH to RH Hold)\nFinish: LF bwd, small step, LK bent, RK straight (Open Opp., LH to RH Hold)"},
+            {"CORTA JACA","SQQ QQQQ","Start: RF fwd (Open Opp., Normal Hold)\nFinish: RF slipped rightwards (Open Opp., Normal Hold)"},
+            {"SAME POSITION CORTA JACA","QQQQ QQQQ QQQQ QQQQ","Start: LF fwd (LK straight) (R Side Same, RH of Man to Lady’s R shoulder)\nFinish: RF in place (R Side Same, RH of Man to Lady’s R shoulder)"},
+            {"DOUBLE SPIRAL TURN<br>(THREE STEP TURN)","SaS<br>Lady QQS","Start: Instep of LF closed to T of RF (R Side Same, LH to RH Hold)\nFinish: LF slipped slightly Bwd (L Side Same, LH to RH Hold)"},
+            {"PROMENADE TO COUNTER PROMENADE RUNS","123 123 123 123","Start: RF fwd OP (R Diag Opp., preceding figure, LH to RH Hold)\nFinish: RF fwd and across body (R Side Same, Release LH Hold)"},
+            {"DRAG","SS","Start: RF bwd and slightly to side (Close Opp or Open Opp., Hold: according to the previous figure)\nFinish: LF side and slightly fwd (R Diag. Opp., Hold: according to the previous figure)"},
+            {"ROLLING OFF THE ARM","SaS SaS<br>Lady S&aS S&aS","Start: LF to side (R Side Same, Shadow Hold)\nFinish: RF in place (R Side Same, Shadow Hold)"},
+            {"CARIOCA RUNS","QQQQ QQQQ","Start: LF to side and slightly bwd (Open Opp., w/o Hold)\nFinish: LF fwd w/o weight, weight on R foot (Open Opp., w/o Hold)"},
+            {"ARGENTINE CROSSES","SaS SaS SaS SaS","Start: RF crossed in front of LF (Close Opp., Normal Hold)\nFinish: LF to side (Close Opp., Normal Hold)"},
+            {"FOOT CHANGE method 1 - LF FORWARD","SS","Start: LF fwd (preceding figure)\nFinish: RF closed to LF"},
+            {"FOOT CHANGE method 2 - RF FORWARD","SS","Start: RF fwd\nFinish: LF closed to RF"},
+            {"FOOT CHANGE method 3 - KICK BALL CHANGE","SaS","Start: RF kick fwd\nFinish: LF in place"}
+
+    };
+}

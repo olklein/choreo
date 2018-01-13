@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+
+        <external-path path="Android/data/com.olklein.choreo/" name="files_root" />
+        <!--&lt;!&ndash;<external-path path="data/data/com.olklein.choreo/files/" name="myfiles_root" />&ndash;&gt;-->
+        <!--&lt;!&ndash;<external-path path="data/data/com.olklein.choreo/" name="myfiles_root" />&ndash;&gt;-->
+        <!--<external-path path="." name="external_storage_root" />-->
+        <files-path name="choreo/files" path="/"/>
+
+</paths>

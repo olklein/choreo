@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright 2014 Magnus Woxblom
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+<resources>
+
+    <string name="app_name" translatable="false">Choreo</string>
+    <string name="action_show_comment">Show Comments</string>
+    <string name="action_hide_comment">Hide Comments</string>
+    <string name="OK">OK</string>
+    <string name="delete">Delete</string>
+    <string name="cancel">Cancel</string>
+    <string name="duplicate">Copy  figure</string>
+    <string name="action_new">New</string>
+    <string name="action_save">Save</string>
+    <string name="action_add">Add one figure</string>
+    <string name="action_reset">Restore</string>
+    <string name="Figure_Editor">Figure:</string>
+    <string name="save_as">Save</string>
+    <string name="Name">Name:</string>
+    <string name="Rhythm">Rhythm:</string>
+    <string name="Comment">Comment:</string>
+    <string name="EnterRhythm">Enter a rhythm</string>
+    <string name="EnterName">Enter a name</string>
+    <string name="FileName">Name:</string>
+    <string name="EnterComment">Enter a comment</string>
+    <string name="EnterFigure">Enter a figure</string>
+    <string name="pressHereToEdit">Click to edit or delete the figure</string>
+    <string name="menu_cancel">Cancel</string>
+    <string name="button_confirm">Confirm to quit?</string>
+    <string name="menu_exit">Quit</string>
+    <string name="jive">Jive</string>
+    <string name="paso">Paso doble</string>
+    <string name="slowWaltz">Slow Waltz</string>
+    <string name="tango">Tango</string>
+    <string name="vienneseWaltz">Viennese Waltz</string>
+    <string name="slowfox">Slow Fox</string>
+    <string name="quickstep">Quickstep</string>
+    <string name="samba">Samba</string>
+    <string name="chacha">Cha cha cha</string>
+    <string name="rumba">Rumba</string>
+    <string name="allDances">All</string>
+    <string name="syllabus">Syllabus</string>
+    <string name="saveitornot">Save</string>
+    <string name="save">Save</string>
+    <string name="dontsave">Don\'t save</string>
+    <string name="saveAlreadyExist">"%s" already exists!</string>
+    <string name="deletethefilewithname">Delete file %s?</string>
+
+    <string name="deleteButton">Delete</string>
+    <string name="drawer_close">Close</string>
+    <string name="drawer_open">Open</string>
+    <string name="button_restore_confirm">Restore previous version?</string>
+    <string name="menu_restore">Restore</string>
+    <string name="dragHandle">Drag handle</string>
+    <string name="SW">S.Waltz</string>
+    <string name="TG">TG</string>
+    <string name="VW">VW</string>
+    <string name="SF">Slow Fox</string>
+    <string name="QS">Quickstep</string>
+    <string name="SB">Samba</string>
+    <string name="RB">Rumba</string>
+    <string name="CC">Cha cha cha</string>
+    <string name="PD">Paso D.</string>
+    <string name="JV">Jive</string>
+    <string name="allDancesShort">Syll.</string>
+    <string name="action_import">Import</string>
+    <string name="replace">Replace</string>
+    <string name="UseThisIconToAddFigure">To add a figure</string>
+    <string name="action_help">Useful tips:</string>
+    <string name="UseThisIconToReset">To restore previous version</string>
+    <string name="moveFigure">To move a figure</string>
+    <string name="UseThisIconToDelete">To delete a choreography</string>
+    <string name="UseThisIconToOpenMainMenu">To open the choreography list</string>
+    I<string name="action_export">Export</string>
+    <string name="action_show_syllabus">Show the syllabus</string>
+    <string name="action_view">Edit as a text file</string>
+    <string name="mail_text">Enclosed a choreo.</string>
+    <string name="mail_subjet">Choreo ("%s")</string>
+    <string name="UseThisIconToCreateNewChoreo">To create a new choreography</string>
+</resources>
