@@ -25,7 +25,7 @@
     <string name="button_confirm">Confirmer pour quitter?</string>
     <string name="menu_exit">Quitter</string>
     <string name="jive">Jive</string>
-    <string name="slowWaltz">Valse lente</string>
+    <string name="slowWaltz">Valse Lente</string>
     <string name="vienneseWaltz">Valse Viennoise</string>
     <string name="slowfox">Slow Fox</string>
     <string name="chacha">Cha cha cha</string>
@@ -48,9 +48,9 @@
     <string name="saveAlreadyExist">"%s" existe déjà!</string>
     <string name="tango">Tango</string>
     <string name="SW">V.Lente</string>
-    <string name="TG">TG</string>
-    <string name="VW">VV</string>
-    <string name="SF">Slow fox</string>
+    <string name="TG">Tango</string>
+    <string name="VW">V.Vien</string>
+    <string name="SF">Slow Fox</string>
     <string name="QS">Quickstep</string>
     <string name="SB">Samba</string>
     <string name="RB">Rumba</string>
@@ -78,4 +78,18 @@
     <string name="action_Licence_Logiciel">Licence logiciel</string>
     <string name="action_Licence_Logiciel_Info">Cette application est distribuée sous licence "Affero General Public License", version 3, publiée par la Free Software Foundation. Elle est disponible à l\'adresse suivante: &#13; https://github.com/olklein/choreo.</string>
     <string name="title_About">A propos</string>
+    <string name="action_show_passport">Passeport Danse</string>
+    <string name="action_show_passport_standard">Passeport standard</string>
+    <string name="action_show_passport_yellow">Jaune</string>
+    <string name="action_show_passport_orange">Orange</string>
+    <string name="action_show_passport_green">Vert</string>
+    <string name="action_show_passport_purple">Violet</string>
+    <string name="action_show_passport_blue">Bleu</string>
+    <string name="action_show_passport_red">Rouge</string>
+    <string name="action_show_passport_latin">Passeport latine</string>
+    <string name="application_icon" />
+    <string name="passport">Passeport Danse</string>
+    <string name="action_show_passport_latin_or_standard">Type de Danse ?</string>
+    <string name="action_show_passport_for">Danse ?</string>
+    <string name="action_show_passport_level">Niveau ?</string>
 </resources>

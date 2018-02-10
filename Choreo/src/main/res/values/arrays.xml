@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="PassportType">
+        <item name="Standard">Standard</item>
+        <item name="Latine">Latin</item>
+    </string-array>
+    <string-array name="PassportColor">
+        <item name="Yellow">Yellow</item>
+        <item name="Orange">Orange</item>
+        <item name="Green">Green</item>
+        <item name="Purple">Purple</item>
+        <item name="Blue">Blue</item>
+        <item name="Red">Red</item>
+    </string-array>
+    <string-array name="PassportColorFromOrange">
+        <item name="Orange">Orange</item>
+        <item name="Green">Green</item>
+        <item name="Purple">Purple</item>
+        <item name="Blue">Blue</item>
+        <item name="Red">Red</item>
+    </string-array>
+
+    <string-array name="PassportColorFromGreen">
+    <item name="Green">Green</item>
+    <item name="Purple">Purple</item>
+    <item name="Blue">Blue</item>
+    <item name="Red">Red</item>
+    </string-array>
+    <string-array name="PassportColorFromPurple">
+        <item name="Purple">Purple</item>
+        <item name="Blue">Blue</item>
+        <item name="Red">Red</item>
+    </string-array>
+    <string-array name="PassportItemColors">
+        <item name="Yellow">#FFFF00</item>
+        <item name="Orange">#FFAA00</item>
+        <item name="Green">#00FF00</item>
+        <item name="Purple">#AA00AA</item>
+        <item name="Blue">#0000FF</item>
+        <item name="Red">#FF0000</item>
+    </string-array>
+    <string-array name="PassportItemColorsFromOrange">
+        <item name="Orange">#FFAA00</item>
+        <item name="Green">#00FF00</item>
+        <item name="Purple">#AA00AA</item>
+        <item name="Blue">#0000FF</item>
+        <item name="Red">#FF0000</item>    </string-array>
+    <string-array name="PassportItemColorsFromGreen">
+        <item name="Green">#00FF00</item>
+        <item name="Purple">#AA00AA</item>
+        <item name="Blue">#0000FF</item>
+        <item name="Red">#FF0000</item>    </string-array>
+    <string-array name="PassportItemColorsFromPurple">
+        <item name="Purple">#AA00AA</item>
+        <item name="Blue">#0000FF</item>
+        <item name="Red">#FF0000</item>
+    </string-array>
+
+    <integer-array name="PassportItemBoxes">
+        <item name="Yellow">1</item>
+        <item name="Orange">2</item>
+        <item name="Green">3</item>
+        <item name="Purple">4</item>
+        <item name="Blue">5</item>
+        <item name="Red">6</item>
+    </integer-array>
+    <integer-array name="PassportItemBoxesFromOrange">
+        <item name="Orange">2</item>
+        <item name="Green">3</item>
+        <item name="Purple">4</item>
+        <item name="Blue">5</item>
+        <item name="Red">6</item>
+    </integer-array>
+    <integer-array name="PassportItemBoxesFromGreen">
+        <item name="Green">3</item>
+        <item name="Purple">4</item>
+        <item name="Blue">5</item>
+        <item name="Red">6</item>
+    </integer-array>
+    <integer-array name="PassportItemBoxesFromPurple">
+        <item name="Purple">4</item>
+        <item name="Blue">5</item>
+        <item name="Red">6</item>
+    </integer-array>
+
+
+    <string-array name="PassportDanceS">
+        <item name="SW">Slow Waltz</item>
+        <item name="TG">Tango</item>
+        <item name="VW">Viennese Waltz</item>
+        <item name="SF">Slow Foxtrot</item>
+        <item name="QS">Quickstep</item>
+    </string-array>    <string-array name="PassportDanceL">
+        <item name="SB">Samba</item>
+        <item name="CC">Cha cha cha</item>
+        <item name="RB">Rumba</item>
+        <item name="PD">Paso Doble</item>
+        <item name="JV">Jive</item>
+    </string-array>
+
+
+</resources>

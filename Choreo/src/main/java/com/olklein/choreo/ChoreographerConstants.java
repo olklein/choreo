@@ -45,6 +45,7 @@ class ChoreographerConstants {
     public static final String TITLENAME 	 = "dance";
     public static final String FILE	 = "filename";
 
+
     public static int getMaxFilenameLength() {
         return MaxFilenameLength;
     }
@@ -78,7 +79,6 @@ class ChoreographerConstants {
                 File[] listOfFiles = home.listFiles();
 
                 for (File file : listOfFiles) {
-                    //Log.d("Files", file.getName());
                     String filename = file.getName();
                     if (!filename.endsWith("onscreen")){
                         fileList.add(filename);
@@ -170,7 +170,6 @@ class ChoreographerConstants {
                 File[] listOfFiles = home.listFiles();
 
                 for (File file : listOfFiles) {
-                    //Log.d("Files", file.getName());
                     String filename = file.getName();
                     if (!filename.endsWith("onscreen")){
                         fileList.add(filename);

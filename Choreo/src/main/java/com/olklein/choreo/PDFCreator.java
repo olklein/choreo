@@ -178,8 +178,11 @@ class PDFCreator {
             }
 
             Font smallFont = new Font(bf,12);
-            Font smallGreyFont = new Font(bf,12,Font.ITALIC);
-            smallGreyFont.setColor(new BaseColor(0xFFAAAAAA));
+            Font smallGreyFont = new Font(bf,11,Font.ITALIC);
+            BaseColor greyColor = new BaseColor(0xFFAAAAAA);
+            smallGreyFont.setColor(greyColor);
+            Font font = new Font();
+            font.setSize(12);
 
             Document document = new Document(PageSize.A4, left, right, top, bottom);
             PdfWriter writer = null;
@@ -200,39 +203,61 @@ class PDFCreator {
             writer.setPageLabels(labels);
             document.open();
 
-            PdfPTable table = new PdfPTable(30);
+            PdfPTable table = new PdfPTable(60);
             table.setTotalWidth(document.getPageSize().getWidth());
             table.setWidthPercentage(100);
 
+
             for (DanceFigure item : mItemArray) {
                 PdfPCell cell = new PdfPCell();
-                cell.setBorder(Rectangle.NO_BORDER);
 
-                Font font = new Font();
-                font.setSize(12);
+                if (item.getComment().equals("") && withComment) {
+                    cell.setBorderColor(greyColor);
+                    cell.setBorder(Rectangle.BOTTOM);
+                }else {
+                    cell.setBorder(Rectangle.NO_BORDER);
+                }
+
                 Paragraph p = new Paragraph();
                 Phrase phrase = new Phrase("\u2022\u00a0"+item.getName(), font);
                 p.add(phrase);
                 cell.addElement(p);
-                cell.setColspan(24);
+                cell.setColspan(46);
+
                 table.addCell(cell);
 
                 cell = new PdfPCell();
-                cell.setBorder(Rectangle.NO_BORDER);
-                cell.addElement(new Phrase(""+item.getTempo(), smallFont));
-                cell.setColspan(6);
+                if (item.getComment().equals("") && withComment) {
+                    cell.setBorderColor(greyColor);
+                    cell.setBorder(Rectangle.BOTTOM);
+                }else {
+                    cell.setBorder(Rectangle.NO_BORDER);
+                }
+                Paragraph prg = new Paragraph(""+item.getTempo(), smallFont);
+                //cell.addElement(new Phrase(""+item.getTempo(), smallFont));
+                prg.setAlignment(Element.ALIGN_RIGHT);
+                cell.addElement(prg);
+
+                cell.setColspan(14);
                 table.addCell(cell);
                 if (!item.getComment().equals("")&& withComment){
                     cell = new PdfPCell();
-                    cell.setColspan(1);
-                    cell.setBorder(Rectangle.NO_BORDER);
-                    cell.addElement(new Phrase("",smallGreyFont));
+                    cell.setColspan(2);
+                    cell.setBorder(Rectangle.BOTTOM);
+                    Phrase ph =new Phrase("",smallGreyFont);
+                    cell.addElement(ph);
+                    cell.setBorderColor(greyColor);
+                    cell.setFixedHeight(24f);
                     table.addCell(cell);
 
                     cell = new PdfPCell();
-                    cell.setBorder(Rectangle.NO_BORDER);
-                    cell.setColspan(29);
+                    cell.setVerticalAlignment(Element.ALIGN_TOP);
+                    cell.setBorder(Rectangle.BOTTOM);
+                    cell.setBorderColor(greyColor);
+
+                    cell.setColspan(58);
                     cell.addElement(new Phrase(""+item.getComment(), smallGreyFont));
+                    cell.setFixedHeight(24f);
                     table.addCell(cell);
                 }
             }
@@ -250,7 +275,7 @@ class PDFCreator {
                 PdfPCell cell = new PdfPCell();
                 cell.setBorder(Rectangle.NO_BORDER);
                 cell.addElement(new Phrase("", smallFont));
-                cell.setColspan(30);
+                cell.setColspan(60);
                 table.addCell(cell);
                 try {
                     document.add(table);

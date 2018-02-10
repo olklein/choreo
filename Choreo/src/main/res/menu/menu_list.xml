@@ -1,27 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
-      xmlns:app="http://schemas.android.com/apk/res-auto"
-      xmlns:tools="http://schemas.android.com/tools"
-      tools:context=".MainActivity"
-    >
-<group>
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context=".MainActivity">
     <item
-        android:id="@+id/action_add_figure"
-        android:title="@string/action_add"
-        android:icon="@drawable/ic_playlist_add_white_48px"
-        app:showAsAction="always"/>
+        android:id="@+id/action_show_passport"
+        android:title="@string/action_show_passport">
+    </item>
+    <group>
+        <item
+            android:id="@+id/action_add_figure"
+            android:title="@string/action_add"
+            android:icon="@drawable/ic_playlist_add_white_48px"
+            app:showAsAction="always"/>
 
-    <item
-        android:id="@+id/action_hide_comment"
-        android:title="@string/action_hide_comment"
-        android:icon="@drawable/ic_mode_comment_white_48px"
-        app:showAsAction="ifRoom"/>
-    <item
+        <item
+            android:id="@+id/action_hide_comment"
+            android:title="@string/action_hide_comment"
+            android:icon="@drawable/ic_mode_comment_white_48px"
+            app:showAsAction="ifRoom"/>
+        <item
             android:id="@+id/action_show_comment"
             android:title="@string/action_show_comment"
             android:icon="@drawable/ic_comment_white_48px"
             app:showAsAction="ifRoom"/>
-</group>
+    </group>
     <item
         android:id="@+id/action_new"
         android:title="@string/action_new"
@@ -33,39 +36,39 @@
         android:icon="@drawable/ic_restore_page_white_48px"
         app:showAsAction="always"/>
     <item android:id="@+id/action_syllabus"
-    android:title="@string/syllabus"
-    app:showAsAction="always">
+        android:title="@string/syllabus"
+        app:showAsAction="always">
 
-    <menu>
+        <menu>
 
-    <group
-        android:checkableBehavior="single"
-        >
-        <item android:id="@+id/allDances"
-            android:title="@string/allDances" />
-        <item
-            android:id="@+id/samba"
-            android:title="@string/samba" />
-        <item android:id="@+id/rumba"
-            android:title="@string/rumba" />
-        <item android:id="@+id/chacha"
-            android:title="@string/chacha" />
-        <item android:id="@+id/paso"
-            android:title="@string/paso" />
-        <item android:id="@+id/jive"
-            android:title="@string/jive" />
-        <item android:id="@+id/slowWaltz"
-            android:title="@string/slowWaltz" />
-        <item android:id="@+id/tango"
-            android:title="@string/tango" />
-        <item android:id="@+id/vienneseWaltz"
-            android:title="@string/vienneseWaltz" />
-        <item android:id="@+id/Slowfox"
-            android:title="@string/slowfox" />
-        <item android:id="@+id/quickstep"
-            android:title="@string/quickstep" />
-    </group>
-    </menu>
+            <group
+                android:checkableBehavior="single"
+                >
+                <item android:id="@+id/allDances"
+                    android:title="@string/allDances" />
+                <item
+                    android:id="@+id/samba"
+                    android:title="@string/samba" />
+                <item android:id="@+id/rumba"
+                    android:title="@string/rumba" />
+                <item android:id="@+id/chacha"
+                    android:title="@string/chacha" />
+                <item android:id="@+id/paso"
+                    android:title="@string/paso" />
+                <item android:id="@+id/jive"
+                    android:title="@string/jive" />
+                <item android:id="@+id/slowWaltz"
+                    android:title="@string/slowWaltz" />
+                <item android:id="@+id/tango"
+                    android:title="@string/tango" />
+                <item android:id="@+id/vienneseWaltz"
+                    android:title="@string/vienneseWaltz" />
+                <item android:id="@+id/Slowfox"
+                    android:title="@string/slowfox" />
+                <item android:id="@+id/quickstep"
+                    android:title="@string/quickstep" />
+            </group>
+        </menu>
 
     </item>
     <item

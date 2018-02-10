@@ -57,7 +57,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -343,7 +342,6 @@ public class MainActivity extends AppCompatActivity {
                 File[] listOfFiles = home.listFiles();
 
                 for (File file : listOfFiles) {
-                    //Log.d("Files", file.getName());
                     String filename = file.getName();
                     if (filename.endsWith("onscreen")){
                         fileList.add(filename);

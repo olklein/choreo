@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="PassportType">
+        <item name="Standard">Standard</item>
+        <item name="Latine">Latine</item>
+    </string-array>
+    <string-array name="PassportColor">
+        <item name="Yellow">Jaune</item>
+        <item name="Orange">Orange</item>
+        <item name="Green">Vert</item>
+        <item name="Purple">Violet</item>
+        <item name="Blue">Bleu</item>
+        <item name="Red">Rouge</item>
+    </string-array>
+    <string-array name="PassportColorFromOrange">
+        <item name="Orange">Orange</item>
+        <item name="Green">Vert</item>
+        <item name="Purple">Violet</item>
+        <item name="Blue">Bleu</item>
+        <item name="Red">Rouge</item>
+    </string-array>
+
+    <string-array name="PassportColorFromGreen">
+        <item name="Green">Vert</item>
+        <item name="Purple">Violet</item>
+        <item name="Blue">Bleu</item>
+        <item name="Red">Rouge</item>
+    </string-array>
+    <string-array name="PassportColorFromPurple">
+        <item name="Purple">Violet</item>
+        <item name="Blue">Bleu</item>
+        <item name="Red">Rouge</item>
+    </string-array>
+    <string-array name="PassportDanceS">
+        <item name="SW">Valse Lente</item>
+        <item name="TG">Tango</item>
+        <item name="VW">Valse Viennoise</item>
+        <item name="SF">Slow Foxtrot</item>
+        <item name="QS">Quickstep</item>
+    </string-array>
+    <string-array name="PassportDanceL">
+    <item name="SB">Samba</item>
+    <item name="CC">Cha cha cha</item>
+    <item name="RB">Rumba</item>
+    <item name="PD">Paso Doble</item>
+    <item name="JV">Jive</item>
+</string-array>
+</resources>

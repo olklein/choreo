@@ -21,7 +21,7 @@
     <string name="OK">OK</string>
     <string name="delete">Delete</string>
     <string name="cancel">Cancel</string>
-    <string name="duplicate">Copy  figure</string>
+    <string name="duplicate">Copy figure</string>
     <string name="action_new">New</string>
     <string name="action_save">Save</string>
     <string name="action_add">Add one figure</string>
@@ -65,8 +65,8 @@
     <string name="menu_restore">Restore</string>
     <string name="dragHandle">Drag handle</string>
     <string name="SW">S.Waltz</string>
-    <string name="TG">TG</string>
-    <string name="VW">VW</string>
+    <string name="TG">Tango</string>
+    <string name="VW">V.Waltz</string>
     <string name="SF">Slow Fox</string>
     <string name="QS">Quickstep</string>
     <string name="SB">Samba</string>
@@ -95,4 +95,18 @@
     <string name="action_Licence_Logiciel">Software License</string>
     <string name="action_Licence_Logiciel_Info">This program is distributed under the terms of the GNU Affero General Public License, version 3, as published by the Free Software Foundation. It can be found at: &#13; https://github.com/olklein/choreo.</string>
     <string name="title_About">About</string>
+    <string name="action_show_passport">Dance Passport</string>
+    <string name="action_show_passport_standard">Standard passport</string>
+    <string name="action_show_passport_yellow">Yellow</string>
+    <string name="action_show_passport_orange">Orange</string>
+    <string name="action_show_passport_green">Green</string>
+    <string name="action_show_passport_purple">Purple</string>
+    <string name="action_show_passport_blue">Blue</string>
+    <string name="action_show_passport_red">Red</string>
+    <string name="action_show_passport_latin">Latin Passport</string>
+    <string name="application_icon" />
+    <string name="passport">Dance Passport</string>
+    <string name="action_show_passport_latin_or_standard">Dance type?</string>
+    <string name="action_show_passport_for">Dance?</string>
+    <string name="action_show_passport_level">Level?</string>
 </resources>

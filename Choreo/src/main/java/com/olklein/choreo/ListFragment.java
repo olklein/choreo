@@ -35,6 +35,8 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.database.Cursor;
+import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -64,6 +66,7 @@ import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.TextView;
 
 import com.woxthebox.draglistview.DragListView;
 import com.woxthebox.draglistview.swipe.ListSwipeHelper;
@@ -713,6 +716,203 @@ public class ListFragment extends Fragment {
                 }
                 return true;
             }
+            //
+            case R.id.action_show_passport: {
+                final Context context = getContext();
+                {
+                    final AlertDialog.Builder  alert = new AlertDialog.Builder(context);
+                    alert.setIcon(R.mipmap.ic_launcher);
+                    alert.setTitle(R.string.action_show_passport_latin_or_standard);
+                    alert.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int whichButton) {
+                            // Canceled.
+                        }
+                    });
+
+                    final ArrayAdapter<String> TypeArrayAdapter = new ArrayAdapter<String> (context, android.R.layout.simple_list_item_1 ) {
+                        @Override
+                        public View getView(int position, View convertView, ViewGroup parent) {
+                            View view = super.getView(position, convertView, parent);
+                            TextView text1 = (TextView) view.findViewById(android.R.id.text1);
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+                                text1.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+                            }
+                            text1.setBackgroundResource(R.drawable.borderfilled);
+                            return view;
+                        }
+
+                    };
+
+                    for (String type :context.getResources().getStringArray(R.array.PassportType))
+                    {
+                        TypeArrayAdapter.add(type);
+                    }
+
+                    //alert.setItems(R.array.PassportType,
+                    alert.setAdapter(TypeArrayAdapter, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int discipline) {
+                            final AlertDialog.Builder alert = new AlertDialog.Builder(context);
+                            final int d= discipline;
+                            alert.setIcon(R.mipmap.ic_launcher);
+                            alert.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int whichButton) {
+                                    // Canceled.
+                                }
+                            });
+                            alert.setTitle(R.string.action_show_passport_for);
+                            final int items ;if (d==0) {
+                                items = R.array.PassportDanceS;
+                            }else{
+                                items = R.array.PassportDanceL;
+                            }
+//
+                            final ArrayAdapter<String> DanceArrayAdapter = new ArrayAdapter<String> (context, android.R.layout.simple_list_item_1 ) {
+                                @Override
+                                public View getView(int position, View convertView, ViewGroup parent) {
+                                    View view = super.getView(position, convertView, parent);
+                                    TextView text1 = (TextView) view.findViewById(android.R.id.text1);
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+                                        text1.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+                                    }
+                                    text1.setBackgroundResource(R.drawable.borderfilled);
+                                    return view;
+                                }
+
+                            };
+
+                            for (String item :context.getResources().getStringArray(items))
+                            {
+                                DanceArrayAdapter.add(item);
+                            }
+                            alert.setAdapter(DanceArrayAdapter, new DialogInterface.OnClickListener() {
+
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int id) {
+                                            final AlertDialog.Builder alert = new AlertDialog.Builder(context);
+                                            final int danceID= id;
+                                            alert.setIcon(R.mipmap.ic_launcher);
+
+                                            alert.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                                                public void onClick(DialogInterface dialog, int whichButton) {
+                                                    // Canceled.
+                                                }
+                                            });
+                                            int items = R.array.PassportColor;
+                                            int itemColors = R.array.PassportItemColors;
+                                            int itemBoxes =  R.array.PassportItemBoxes;
+
+                                            if (d==0){
+                                                alert.setTitle(R.string.action_show_passport_level);
+                                                if (danceID ==2) {
+                                                    items = R.array.PassportColorFromPurple;
+                                                    itemColors = R.array.PassportItemColorsFromPurple;
+                                                    itemBoxes =  R.array.PassportItemBoxesFromPurple;
+                                                }
+                                                if (danceID ==3){
+                                                    items = R.array.PassportColorFromGreen;
+                                                    itemColors = R.array.PassportItemColorsFromGreen;
+                                                    itemBoxes =  R.array.PassportItemBoxesFromGreen;
+                                                }
+                                                if (danceID ==4){
+                                                    items = R.array.PassportColorFromOrange;
+                                                    itemColors = R.array.PassportItemColorsFromOrange;
+                                                    itemBoxes =  R.array.PassportItemBoxesFromOrange;
+                                                }
+                                            }
+                                            if (d==1){
+                                                alert.setTitle(R.string.action_show_passport_level);
+                                                if (danceID ==0){
+                                                    items = R.array.PassportColorFromGreen;
+                                                    itemColors = R.array.PassportItemColorsFromGreen;
+                                                    itemBoxes =  R.array.PassportItemBoxesFromGreen;
+                                                }
+                                                if (danceID ==2){
+                                                    items = R.array.PassportColorFromOrange;                                                    itemColors = R.array.PassportItemColorsFromPurple;
+                                                    itemColors = R.array.PassportItemColorsFromOrange;
+                                                    itemBoxes =  R.array.PassportItemBoxesFromOrange;
+                                                }
+                                                if (danceID ==3){
+                                                    items = R.array.PassportColorFromPurple;
+                                                    itemColors = R.array.PassportItemColorsFromPurple;
+                                                    itemBoxes =  R.array.PassportItemBoxesFromPurple;
+                                                }
+                                            }
+                                            final int colors = itemColors;
+                                            final int boxes = itemBoxes;
+                                            final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String> (context, R.layout.passportcoloritem ) {
+                                                @Override
+                                                public View getView(int position, View convertView, ViewGroup parent) {
+                                                    View view = super.getView(position, convertView, parent);
+                                                    TextView text1 = (TextView) view.findViewById(android.R.id.text1);
+                                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+                                                        text1.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+                                                    }
+                                                    text1.setBackgroundResource(R.drawable.borderfilled);
+                                                    String colorStr= context.getResources().getStringArray(colors)[position];
+
+                                                    text1.setTextColor(Color.parseColor(colorStr));
+                                                    {
+                                                        int resID = context.getResources().getIntArray(boxes)[position];
+                                                        Drawable drawable;
+                                                        switch (resID){
+                                                            case 1:
+                                                                text1.setCompoundDrawablesWithIntrinsicBounds(R.drawable.yellowbox,R.drawable.nobox,R.drawable.nobox,R.drawable.nobox);
+                                                                break;
+                                                            case 2:
+                                                                text1.setCompoundDrawablesWithIntrinsicBounds(R.drawable.orangebox,R.drawable.nobox,R.drawable.nobox,R.drawable.nobox);
+
+                                                                break;
+                                                            case 3:
+                                                                text1.setCompoundDrawablesWithIntrinsicBounds(R.drawable.greenbox,R.drawable.nobox,R.drawable.nobox,R.drawable.nobox);
+                                                                break;
+                                                            case 4:
+                                                                text1.setCompoundDrawablesWithIntrinsicBounds(R.drawable.purplebox,R.drawable.nobox,R.drawable.nobox,R.drawable.nobox);
+                                                                break;
+                                                            case 5:
+                                                                text1.setCompoundDrawablesWithIntrinsicBounds(R.drawable.bluebox,R.drawable.nobox,R.drawable.nobox,R.drawable.nobox);
+                                                                break;
+                                                            case 6:
+                                                                text1.setCompoundDrawablesWithIntrinsicBounds(R.drawable.redbox,R.drawable.nobox,R.drawable.nobox,R.drawable.nobox);
+                                                                break;
+                                                        }
+                                                    }
+                                                    return view;
+                                                }
+                                            };
+
+                                            for (String item :context.getResources().getStringArray(items))
+                                            {
+                                                arrayAdapter.add(item);
+                                            }
+//                                          alert.setItems(items, new DialogInterface.OnClickListener() {
+                                            alert.setAdapter(arrayAdapter, new DialogInterface.OnClickListener() {
+                                                        @Override
+                                                        public void onClick(DialogInterface dialog, int which) {
+                                                            show_passport(context, d,danceID, which);
+                                                        }
+                                                    }
+                                            );
+
+                                            final AlertDialog dial = alert.create();
+                                            dial.show();
+
+                                        }
+                                    }
+
+                            );
+
+                            final AlertDialog dial = alert.create();
+                            dial.show();
+
+                        }
+                    });
+                    final AlertDialog dialog = alert.create();
+                    dialog.show();
+                }
+                return true;
+            }
+
             case R.id.allDances:
             case R.id.slowWaltz:
             case R.id.tango:
@@ -768,6 +968,60 @@ public class ListFragment extends Fragment {
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void show_passport(final Context context, int discipline, int dance_id, int color) {
+        dance_file = Passport.getName();
+        isSyllabus = false;
+        getActivity().supportInvalidateOptionsMenu();
+
+        DanceCustomAdapter danceListAdapter = new DanceCustomAdapter(context, R.layout.dance_custom_list, ChoreographerConstants.DANCE_LIST_FILENAME);
+        ListView drawerList = (ListView) MainActivity.context.findViewById(R.id.left_drawer);
+        drawerList.setAdapter(danceListAdapter);
+        danceListAdapter.setClicked(-1);
+        ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
+        if (actionBar != null) {
+            actionBar.setTitle(R.string.passport);
+        }
+        if (mItemArray != null) mItemArray.clear();
+        sCreatedItems = 0;
+        if (listAdapter != null) {
+            listAdapter.setLastPosition(-1);
+            listAdapter.notifyDataSetChanged();
+        }
+
+
+        //
+        {
+            if (dance_file != null && dance_file.equals("")){
+                isSyllabus=false;
+            }
+            com.olklein.choreo.Passport.setDance(context,discipline,dance_id,color);
+            getActivity().supportInvalidateOptionsMenu();
+            //if (isSyllabus)
+            {
+                dance_file= Passport.getName();
+                //    isSyllabus=true;
+                getActivity().supportInvalidateOptionsMenu();
+                danceListAdapter = new DanceCustomAdapter(context, R.layout.dance_custom_list, ChoreographerConstants.DANCE_LIST_FILENAME);
+                drawerList = (ListView) MainActivity.context.findViewById(R.id.left_drawer);
+                drawerList.setAdapter(danceListAdapter);
+                danceListAdapter.setClicked(-1);
+                actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
+                if (actionBar != null) {
+                    actionBar.setTitle(dance_file);
+                }
+                if (mItemArray!=null) mItemArray.clear();
+                sCreatedItems = 0;
+                if (listAdapter != null) {
+                    listAdapter.setLastPosition(-1);
+                    listAdapter.notifyDataSetChanged();
+                }
+                for (String[] figure : Passport.figuresWithTempo){
+                    addFigure(figure);
+                }
+            }
+        }
     }
 
     private String getEquivalent(final File file) {
@@ -850,8 +1104,6 @@ public class ListFragment extends Fragment {
         if (out != null) {
             PDFCreator creator = new PDFCreator();
             Resources resources = context.getResources();
-
-
             creator.createPdf(context, filePath, headerTitle,listAdapter.isCommentEnabled(),resources.getDrawable(R.drawable.choreologo),mItemArray,out);
 
             NotificationManager mNotifyManager;
