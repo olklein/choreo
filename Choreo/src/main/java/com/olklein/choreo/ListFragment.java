@@ -1151,7 +1151,6 @@ public class ListFragment extends Fragment {
 
         isSyllabus = false;
         getActivity().supportInvalidateOptionsMenu();
-
         DanceCustomAdapter danceListAdapter = new DanceCustomAdapter(context, R.layout.dance_custom_list, ChoreographerConstants.DANCE_LIST_FILENAME);
         ListView drawerList = (ListView) MainActivity.context.findViewById(R.id.left_drawer);
         drawerList.setAdapter(danceListAdapter);
