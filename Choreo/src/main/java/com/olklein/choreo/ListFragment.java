@@ -1144,49 +1144,43 @@ public class ListFragment extends Fragment {
     }
 
     private void show_passport(final Context context, int discipline, int dance_id, int color) {
-
         com.olklein.choreo.Passport.setDance(context,discipline,dance_id,color);
-
         dance_file = ChoreographerConstants.addNew(context, Passport.getName());
-
-        isSyllabus = false;
-        getActivity().supportInvalidateOptionsMenu();
         DanceCustomAdapter danceListAdapter = new DanceCustomAdapter(context, R.layout.dance_custom_list, ChoreographerConstants.DANCE_LIST_FILENAME);
         ListView drawerList = (ListView) MainActivity.context.findViewById(R.id.left_drawer);
         drawerList.setAdapter(danceListAdapter);
-        danceListAdapter.setClicked(-1);
-        ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
-        if (actionBar != null) {
-            actionBar.setTitle(R.string.passport);
+
+        int index = ChoreographerConstants.getIndex(dance_file);
+        if (index != -1) {
+            danceListAdapter.setClicked(index);
+            ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
+            if (actionBar != null) {
+                actionBar.setTitle(dance_file);
+                actionBar.setDisplayHomeAsUpEnabled(true);
+                actionBar.setHomeButtonEnabled(true);
+                DrawerLayout mDrawerLayout = (DrawerLayout)  getActivity().findViewById(R.id.drawer_layout);
+                mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
+            }
+            isSyllabus=false;
+            getActivity().supportInvalidateOptionsMenu();
         }
-        if (mItemArray != null) mItemArray.clear();
+
+        if (mItemArray!=null) mItemArray.clear();
         sCreatedItems = 0;
+
         if (listAdapter != null) {
             listAdapter.setLastPosition(-1);
             listAdapter.notifyDataSetChanged();
         }
 
-        {
-            getActivity().supportInvalidateOptionsMenu();
-            {
-                danceListAdapter = new DanceCustomAdapter(context, R.layout.dance_custom_list, ChoreographerConstants.DANCE_LIST_FILENAME);
-                drawerList = (ListView) MainActivity.context.findViewById(R.id.left_drawer);
-                drawerList.setAdapter(danceListAdapter);
-                danceListAdapter.setClicked(-1);
-                actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
-                if (actionBar != null) {
-                    actionBar.setTitle(dance_file);
-                }
-                if (mItemArray!=null) mItemArray.clear();
-                sCreatedItems = 0;
-                if (listAdapter != null) {
-                    listAdapter.setLastPosition(-1);
-                    listAdapter.notifyDataSetChanged();
-                }
-                for (String[] figure : Passport.figuresWithTempo){
-                    addFigure(figure);
-                }
-            }
+        for (String[] figure : Passport.figuresWithTempo){
+            addFigure(figure);
+        }
+        try {
+            saveDance(dance_file);
+            saveDance(dance_file + "onscreen");
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
