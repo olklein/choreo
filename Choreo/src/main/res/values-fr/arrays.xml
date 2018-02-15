@@ -19,7 +19,6 @@
         <item name="Blue">Bleu</item>
         <item name="Red">Rouge</item>
     </string-array>
-
     <string-array name="PassportColorFromGreen">
         <item name="Green">Vert</item>
         <item name="Purple">Violet</item>
@@ -45,4 +44,38 @@
     <item name="PD">Paso Doble</item>
     <item name="JV">Jive</item>
 </string-array>
+    <string-array name="PassportItemColors">
+        <item name="Yellow">#FFFF00</item>
+        <item name="Orange">#FFAA00</item>
+        <item name="Green">#00FF00</item>
+        <item name="Purple">#AA00AA</item>
+        <item name="Blue">#0000FF</item>
+        <item name="Red">#FF0000</item>
+    </string-array>
+    <string-array name="PassportItemColorsFromOrange">
+        <item name="Orange">#FFAA00</item>
+        <item name="Green">#00FF00</item>
+        <item name="Purple">#AA00AA</item>
+        <item name="Blue">#0000FF</item>
+        <item name="Red">#FF0000</item>    </string-array>
+    <string-array name="PassportItemColorsFromGreen">
+        <item name="Green">#00FF00</item>
+        <item name="Purple">#AA00AA</item>
+        <item name="Blue">#0000FF</item>
+        <item name="Red">#FF0000</item>    </string-array>
+    <string-array name="PassportItemColorsFromPurple">
+        <item name="Purple">#AA00AA</item>
+        <item name="Blue">#0000FF</item>
+        <item name="Red">#FF0000</item>
+    </string-array>
+    <string-array name="VideoCommands">
+        <item name="Capture">Prendre</item>
+        <item name="Import">Importer</item>
+        <item name="Cleaning">Nettoyer</item>
+    </string-array>
+    <string-array name="ImportExportCommands">
+        <item name="Import">Importer</item>
+        <item name="Export">Exporter</item>
+    </string-array>
+
 </resources>

@@ -343,7 +343,7 @@ public class MainActivity extends AppCompatActivity {
 
                 for (File file : listOfFiles) {
                     String filename = file.getName();
-                    if (filename.endsWith("onscreen")){
+                    if (filename.endsWith("onscreen") &&  !file.isDirectory()){
                         fileList.add(filename);
                     }
                 }
@@ -386,7 +386,9 @@ public class MainActivity extends AppCompatActivity {
                 File[] listOfFiles = home.listFiles();
                 for (File file : listOfFiles) {
                     String filename = file.getName();
-                    fileList.add(filename);
+                    if (!file.isDirectory()){
+                        fileList.add(filename);
+                    }
                 }
             }
         }

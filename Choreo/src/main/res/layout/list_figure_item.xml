@@ -13,14 +13,7 @@
      See the License for the specific language governing permissions and
      limitations under the License.
 -->
-<!--<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/item_figure_layout"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="horizontal"
-    android:gravity="center_vertical"
-    android:paddingBottom="1dp"
-    android:background="@drawable/list_item_selector">-->
+
 <com.woxthebox.draglistview.swipe.ListSwipeItem
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -73,6 +66,7 @@
         android:paddingBottom="1dp"
         android:background="@drawable/list_item_selector">
         <LinearLayout
+            android:id="@+id/item"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
@@ -142,36 +136,8 @@
                     android:textAppearance="@style/TextAppearance.AppCompat.Small"
                     android:paddingBottom="3dp"
                     android:layout_marginBottom="0dp"
-                    android:layout_marginTop="0dp"
-                    />
+                    android:layout_marginTop="0dp"/>
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>
 </com.woxthebox.draglistview.swipe.ListSwipeItem>
-    <!--android:textAppearance="@style/TextAppearance.AppCompat.Body1"-->
-
-    <!--</LinearLayout>-->
-    <!--
-    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        android:id="@+id/item_layout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:padding="16dp"
-        android:background="@drawable/list_item_selector">
-
-        <ImageView
-            android:id="@+id/image"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginRight="16dp"
-            android:src="@drawable/ic_launcher"/>
-
-        <TextView
-            android:id="@+id/text"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
-
-
-    </LinearLayout>-->

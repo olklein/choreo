@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- Copyright 2014 Magnus Woxblom
+<?xml version="1.0" encoding="utf-8"?><!-- Copyright 2014 Magnus Woxblom
 
      Licensed under the Apache License, Version 2.0 (the "License");
      you may not use this file except in compliance with the License.
@@ -36,6 +35,7 @@
         <item name="titleTextStyle">@style/MyTheme.ActionBar.TitleTextStyle</item>
         <item name="subtitleTextStyle">@style/MyTheme.ActionBar.TitleTextStyle</item>
     </style>
+
     <style name="MyTheme.ActionBar.TitleTextStyle" parent="@style/TextAppearance.AppCompat.Widget.ActionBar.Title.Inverse">
         <item name="android:textColor">@android:color/holo_orange_light</item>
         <item name="android:textColorHighlight">@android:color/holo_orange_light</item>
@@ -46,6 +46,7 @@
     <style name="MyTheme.style.TextAppearance.AppCompat.Medium" parent="@style/TextAppearance.AppCompat.Medium">
         <item name="android:textColor">@android:color/black</item>
     </style>
+
     <style name="MyTheme.style.TextAppearance.AppCompat.Small" parent="@style/TextAppearance.AppCompat.Small">
         <item name="android:textColor">@android:color/black</item>
     </style>
@@ -63,5 +64,17 @@
         <item name="android:divider">@color/app_color</item>
         <item name="android:dividerHeight">2dp</item>
         <!--<item name="android:background">@android:color/holo_blue_bright</item>-->
+    </style>
+
+    <style name="FullscreenTheme" parent="AppTheme">
+        <item name="android:actionBarStyle">@style/FullscreenActionBarStyle</item>
+        <item name="android:windowActionBarOverlay">true</item>
+        <item name="android:windowBackground">@null</item>
+        <item name="metaButtonBarStyle">?android:attr/buttonBarStyle</item>
+        <item name="metaButtonBarButtonStyle">?android:attr/buttonBarButtonStyle</item>
+    </style>
+
+    <style name="FullscreenActionBarStyle" parent="android:Widget.Holo.ActionBar">
+        <item name="android:background">@color/black_overlay</item>
     </style>
 </resources>

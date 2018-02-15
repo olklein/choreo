@@ -29,7 +29,6 @@
             android:layout_below="@+id/nameHeader"
             android:layout_alignLeft="@+id/nameHeader"
             android:layout_alignStart="@+id/nameHeader"
-            android:nextFocusDown="@+id/rhythm"
             android:hint="@string/EnterFigure"
             android:imeOptions="actionNext"
             />
@@ -51,7 +50,6 @@
             android:layout_below="@+id/rhythmHeader"
             android:layout_alignLeft="@+id/name"
             android:layout_alignStart="@+id/name"
-            android:nextFocusDown="@+id/comment"
             android:hint="@string/EnterRhythm"
             android:imeOptions="actionNext"
             />
@@ -77,4 +75,5 @@
             android:hint="@string/EnterComment"
             android:imeOptions="actionDone"
             />
-    </RelativeLayout> </ScrollView>
+    </RelativeLayout>
+</ScrollView>

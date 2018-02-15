@@ -72,93 +72,94 @@ import static android.support.v4.content.FileProvider.getUriForFile;
  */
 
 class PDFCreator {
-    private final float left = 30;
-    private final float right = 30;
-    private final float top = 50;
-    private final float bottom = 40;
-    private ArrayList<DanceFigure> mItemArray;
-    private String headerTitle;
+    private static final float left = 30;
+    private static final float right = 30;
+    private static final float top = 50;
+    private static final float bottom = 40;
+
 
     public void createPdf(Context ctxt, String filePath, String title, boolean withComment, Drawable drawable, ArrayList<DanceFigure> items, FileOutputStream outFile) {
-        mItemArray = items;
-        new GetResults(ctxt, withComment, drawable, outFile ).execute(filePath,title );
+        new GetResults(ctxt, withComment, drawable, items, outFile).execute(filePath,title );
     }
 
-    class MyFooter extends PdfPageEventHelper {
+    static class MyFooter extends PdfPageEventHelper {
         final Drawable logoDrawable;
+        final String headerTitle;
 
-        public MyFooter(Drawable drawable) {
+
+        public MyFooter(Drawable drawable, String headertitle) {
             logoDrawable = drawable;
+            headerTitle = headertitle;
         }
         final Font footerFont = new Font(Font.FontFamily.UNDEFINED, 10, Font.ITALIC);
         final Font headerFont = FontFactory.getFont(FontFactory.HELVETICA, 16, Font.BOLDITALIC);
 
         public void onEndPage(PdfWriter writer, Document document) {
-            PdfContentByte cb = writer.getDirectContent();
-            PdfPTable headerLine = new PdfPTable(2);
-            headerLine.setTotalWidth(document.getPageSize().getWidth()-2*30);
+            if (writer != null) {
+                PdfContentByte cb = writer.getDirectContent();
+                PdfPTable headerLine = new PdfPTable(2);
+                headerLine.setTotalWidth(document.getPageSize().getWidth() - 2 * 30);
+
+                try {
+                    headerLine.setWidths(new int[]{1, 14});
+                } catch (DocumentException e1) {
+                    e1.printStackTrace();
+                }
+
+                headerLine.setLockedWidth(true);
+                headerLine.getDefaultCell().setFixedHeight(30);
+                headerLine.getDefaultCell().setBorder(Rectangle.BOTTOM);
+                headerLine.getDefaultCell().setBorderColor(new BaseColor(0xFF4285f4));
+                Phrase phrase = new Phrase(headerTitle, headerFont);
+                headerFont.setColor(new BaseColor(0xFF4285f4));
+
+                // add image
+                Image logo;
+
+                BitmapDrawable bitDw = ((BitmapDrawable) logoDrawable);
+                Bitmap bmp = bitDw.getBitmap();
+                ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                bmp.compress(Bitmap.CompressFormat.PNG, 100, stream);
+
+                try {
+                    logo = Image.getInstance(stream.toByteArray());
+                    headerLine.addCell(logo);
+                } catch (BadElementException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
 
 
+                headerLine.addCell(phrase);
+                // write content
+                headerLine.writeSelectedRows(0, -1, document.leftMargin(),
+                        document.getPageSize().getHeight() - (document.topMargin() - headerLine.getTotalHeight()) / 2, writer.getDirectContent());
 
-            try {
-                headerLine.setWidths(new int[]{1, 14});
-            } catch (DocumentException e1) {
-                e1.printStackTrace();
+                Phrase footer = new Phrase("" + document.getPageNumber(), footerFont);
+                ColumnText.showTextAligned(cb, Element.ALIGN_CENTER,
+                        footer,
+                        (document.right() - document.left()) / 2 + document.leftMargin(),
+                        document.bottom() - document.bottomMargin() / 2, 0);
             }
-
-            headerLine.setLockedWidth(true);
-            headerLine.getDefaultCell().setFixedHeight(30);
-            headerLine.getDefaultCell().setBorder(Rectangle.BOTTOM);
-            headerLine.getDefaultCell().setBorderColor(new BaseColor(0xFF4285f4));
-            Phrase phrase = new Phrase(headerTitle, headerFont);
-            headerFont.setColor(new BaseColor(0xFF4285f4));
-
-            // add image
-            Image logo;
-            Drawable d = logoDrawable;
-
-            BitmapDrawable bitDw = ((BitmapDrawable) d);
-            Bitmap bmp = bitDw.getBitmap();
-            ByteArrayOutputStream stream = new ByteArrayOutputStream();
-            bmp.compress(Bitmap.CompressFormat.PNG, 100, stream);
-
-            try {
-                logo = Image.getInstance(stream.toByteArray());
-                headerLine.addCell(logo);
-            } catch (BadElementException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-
-            headerLine.addCell(phrase);
-            // write content
-            headerLine.writeSelectedRows(0, -1, document.leftMargin(),
-                    document.getPageSize().getHeight() -(document.topMargin()-headerLine.getTotalHeight())/2, writer.getDirectContent());
-
-            Phrase footer = new Phrase(""+document.getPageNumber(), footerFont);
-            ColumnText.showTextAligned(cb, Element.ALIGN_CENTER,
-                    footer,
-                    (document.right() - document.left()) / 2 + document.leftMargin(),
-                    document.bottom() - document.bottomMargin()/2, 0);
         }
     }
     // new
-    class GetResults extends AsyncTask<String, Void, String> {
+    static class GetResults extends AsyncTask<String, Void, String> {
         final Context ctxt;
         String filename;
         String filePath;
         final Drawable drawable;
         final FileOutputStream outFile;
         final boolean withComment;
+        final private ArrayList<DanceFigure> mItemArray;
 
-
-        GetResults(Context context, Boolean Comment, Drawable d, FileOutputStream out){
+        GetResults(Context context, Boolean Comment, Drawable d, ArrayList<DanceFigure> items, FileOutputStream out){
             ctxt= context;
             drawable = d;
             outFile = out;
             withComment = Comment;
+            mItemArray = items;
         }
 
         @Override
@@ -167,14 +168,14 @@ class PDFCreator {
             filePath =params[0];
             filename =params[1];
 
-            headerTitle=filename;
+            //headerTitle=filename;
             BaseFont bf = null;
             try {
                 bf = BaseFont.createFont("assets/fonts/FreeSans.ttf", BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
             } catch (DocumentException | IOException e) {
                 e.printStackTrace();
                 NotificationManager mNotifyManager=(NotificationManager) ctxt.getSystemService(Context.NOTIFICATION_SERVICE);
-                mNotifyManager.cancel(1234);
+                if (mNotifyManager != null) mNotifyManager.cancel(1234);
             }
 
             Font smallFont = new Font(bf,12);
@@ -191,16 +192,18 @@ class PDFCreator {
             } catch (DocumentException e) {
                 e.printStackTrace();
                 NotificationManager mNotifyManager=(NotificationManager) ctxt.getSystemService(Context.NOTIFICATION_SERVICE);
-                mNotifyManager.cancel(1234);
+                if (mNotifyManager != null) mNotifyManager.cancel(1234);
             }
-            document.addTitle(headerTitle);
-            MyFooter event = new MyFooter(drawable);
-            writer.setPageEvent(event);
+            document.addTitle(filename);
+            if (writer!= null) {
+                MyFooter event = new MyFooter(drawable,filename);
+                writer.setPageEvent(event);
 
-            PdfPageLabels labels = new PdfPageLabels();
-            labels.addPageLabel(1, PdfPageLabels.DECIMAL_ARABIC_NUMERALS);
+                PdfPageLabels labels = new PdfPageLabels();
+                labels.addPageLabel(1, PdfPageLabels.DECIMAL_ARABIC_NUMERALS);
 
-            writer.setPageLabels(labels);
+                writer.setPageLabels(labels);
+            }
             document.open();
 
             PdfPTable table = new PdfPTable(60);
@@ -210,7 +213,7 @@ class PDFCreator {
 
             for (DanceFigure item : mItemArray) {
                 PdfPCell cell = new PdfPCell();
-
+                if (item.getTempo().startsWith("VideoURI-")) continue;
                 if (item.getComment().equals("") && withComment) {
                     cell.setBorderColor(greyColor);
                     cell.setBorder(Rectangle.BOTTOM);
@@ -269,7 +272,7 @@ class PDFCreator {
                 } catch (DocumentException e) {
                     e.printStackTrace();
                     NotificationManager mNotifyManager=(NotificationManager) ctxt.getSystemService(Context.NOTIFICATION_SERVICE);
-                    mNotifyManager.cancel(1234);
+                    if (mNotifyManager != null) mNotifyManager.cancel(1234);
                 }
             }else{
                 PdfPCell cell = new PdfPCell();
@@ -283,18 +286,13 @@ class PDFCreator {
                 } catch (DocumentException e) {
                     e.printStackTrace();
                     NotificationManager mNotifyManager=(NotificationManager) ctxt.getSystemService(Context.NOTIFICATION_SERVICE);
-                    mNotifyManager.cancel(1234);
+                    if (mNotifyManager != null) mNotifyManager.cancel(1234);
                 }
             }
 
 
             return "Done";
         }
-
-//        @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
-//        protected void onPreExecute() {
-//            super.onPreExecute();
-//        }
 
         protected void onPostExecute(String result) {
             Resources resources = ctxt.getResources();
@@ -306,7 +304,6 @@ class PDFCreator {
 
             Intent intent = new Intent(Intent.ACTION_VIEW);
 
-
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 fileURI = getUriForFile(ctxt, "com.olklein.choreo.fileProvider", file);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
@@ -315,8 +312,6 @@ class PDFCreator {
                 fileURI= Uri.fromFile(file);
                 intent.setDataAndType(fileURI, "application/pdf");
             }
-
-
 
             intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_WRITE_URI_PERMISSION );
 
@@ -331,9 +326,10 @@ class PDFCreator {
                     .setAutoCancel(true)
                     .setColor(color);
 
-            mNotifyManager.notify(1235, mBuilder.build());
-            mNotifyManager.cancel(1234);
+            if (mNotifyManager != null){
+                mNotifyManager.notify(1235, mBuilder.build());
+                mNotifyManager.cancel(1234);
+            }
         }
-
     }
 }

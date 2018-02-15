@@ -3,6 +3,8 @@ package com.olklein.choreo;
 import android.content.Context;
 import android.support.v4.content.ContextCompat;
 import android.view.View;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.woxthebox.draglistview.DragItem;
@@ -39,8 +41,14 @@ import com.woxthebox.draglistview.DragItem;
 
 class MydragItem extends DragItem {
 
+    private final int itemBorderColor;
+    private final int itemBackgroundColor;
     public MydragItem(Context context, int layoutId) {
         super(context, layoutId);
+        itemBorderColor = ContextCompat.getColor(context,
+                R.color.list_item_color_dark/* 0x00E0ECF8*/);
+        itemBackgroundColor = ContextCompat.getColor(context,
+                R.color.list_item_background /* AACCCCCC*/);
     }
 
     @Override
@@ -49,10 +57,24 @@ class MydragItem extends DragItem {
         ((TextView) dragView.findViewById(R.id.nameTv)).setText(text);
         text = ((TextView) clickedView.findViewById(R.id.rhythmTv)).getText();
         ((TextView) dragView.findViewById(R.id.rhythmTv)).setText(text);
+        if (text.toString().startsWith("VideoURI-")){
+            ((TextView) dragView.findViewById(R.id.rhythmTv)).setVisibility(View.GONE);
+            ((ImageView) dragView.findViewById(R.id.image)).setImageResource(R.drawable.ic_theater_48);
+            ((ImageView) dragView.findViewById(R.id.image)).setBackgroundColor(itemBorderColor);
+            ((TextView) dragView.findViewById(R.id.nameTv)).setBackgroundColor(itemBorderColor);
+            ((LinearLayout) dragView.findViewById(R.id.item)).setBackgroundColor(itemBorderColor);
+
+        }else {
+            ((TextView) dragView.findViewById(R.id.rhythmTv)).setVisibility(View.GONE);
+            ((ImageView) dragView.findViewById(R.id.image)).setImageResource(R.drawable.ic_drag_handle_black_48px);
+            ((TextView) dragView.findViewById(R.id.nameTv)).setBackgroundColor(itemBackgroundColor);
+            ((ImageView) dragView.findViewById(R.id.image)).setBackgroundColor(itemBackgroundColor);
+            ((TextView) dragView.findViewById(R.id.commentTv)).setVisibility(View.GONE);
+            ((LinearLayout) dragView.findViewById(R.id.item)).setBackgroundColor(itemBackgroundColor);
+        }
         text = ((TextView) clickedView.findViewById(R.id.commentTv)).getText();
         ((TextView) dragView.findViewById(R.id.commentTv)).setText(text);
 
-        dragView.setBackgroundColor(ContextCompat.getColor(dragView.getContext(),R.color.list_item_background));
+        dragView.setBackgroundColor(itemBackgroundColor);
     }
 }
-

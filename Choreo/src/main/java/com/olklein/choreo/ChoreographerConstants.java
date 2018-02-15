@@ -80,7 +80,7 @@ class ChoreographerConstants {
 
                 for (File file : listOfFiles) {
                     String filename = file.getName();
-                    if (!filename.endsWith("onscreen")){
+                    if (!filename.endsWith("onscreen") && !file.isDirectory()){
                         fileList.add(filename);
                     }
                 }
@@ -136,7 +136,7 @@ class ChoreographerConstants {
                             DANCE_LIST_FILENAME[index] = name;
                             DANCE_LIST_NAME[index++] = name;
                         }
-                        return updatedFilename;
+                        reDoIt = false;
                     }else{
                                 updatedFilename = newFilename + " (" + addCounter + ")";
                                 addCounter++;
@@ -147,7 +147,6 @@ class ChoreographerConstants {
             } else {
                 DANCE_LIST_FILENAME = new String[1];
                 DANCE_LIST_NAME = new String[1];
-
                 DANCE_LIST_FILENAME[0] = newFilename;
                 DANCE_LIST_NAME[0] = newFilename;
                 return newFilename;
@@ -171,7 +170,7 @@ class ChoreographerConstants {
 
                 for (File file : listOfFiles) {
                     String filename = file.getName();
-                    if (!filename.endsWith("onscreen")){
+                    if (!filename.endsWith("onscreen") && !file.isDirectory()){
                         fileList.add(filename);
                     }
                 }

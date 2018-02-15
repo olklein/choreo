@@ -90,13 +90,22 @@
         <item name="VW">Viennese Waltz</item>
         <item name="SF">Slow Foxtrot</item>
         <item name="QS">Quickstep</item>
-    </string-array>    <string-array name="PassportDanceL">
+    </string-array>
+    <string-array name="PassportDanceL">
         <item name="SB">Samba</item>
         <item name="CC">Cha cha cha</item>
         <item name="RB">Rumba</item>
         <item name="PD">Paso Doble</item>
         <item name="JV">Jive</item>
     </string-array>
-
+    <string-array name="VideoCommands">
+        <item name="Capture">Capture</item>
+        <item name="Import">Import</item>
+        <item name="Clean">Cleaning</item>
+    </string-array>
+    <string-array name="ImportExportCommands">
+        <item name="Import">Import</item>
+        <item name="Export">Export</item>
+    </string-array>
 
 </resources>

@@ -84,23 +84,15 @@ import java.util.ArrayList;
 
 class Passport {
 
-    public static ArrayList<String> figures = new ArrayList<>();
-    private static final ArrayList<String> figuresRhythm = new ArrayList<>();
+//    public static ArrayList<String> figures = new ArrayList<>();
     public static ArrayList<String[]> figuresWithTempo;
-    private static int dance=0;
-    private static int color=0;
-    private static int discipline =0;
+
 
     private static String danceName="";
 
-    public static void init(Context context){
-        setDance(context, discipline, dance,color);
-    }
-
-
     public static void setDance(Context context,int discipline, int dance, int color) {
-        setDanceId(dance);
-        Passport.figures= new ArrayList<>();
+//      setDanceId(dance);
+//      Passport.figures= new ArrayList<>();
         Passport.figuresWithTempo= new ArrayList<>();
         int i;
 
@@ -354,7 +346,6 @@ class Passport {
 
             i=0;
             while (i< list.length){
-                figures.add(list[i][0]);
                 figuresWithTempo.add(list[i]);
                 i++;
             }
@@ -364,11 +355,10 @@ class Passport {
         danceName =string;
     }
 
-
     public static String getName() {
         return danceName;
     }
-    private static void setDanceId(int id){
-        dance = id;
-    }
+//    private static void setDanceId(int id){
+//        dance = id;
+//    }
 }

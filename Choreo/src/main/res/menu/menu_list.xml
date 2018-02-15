@@ -7,6 +7,17 @@
         android:id="@+id/action_show_passport"
         android:title="@string/action_show_passport">
     </item>
+    <item
+        android:id="@+id/action_video"
+        android:title="@string/action_video"
+        app:showAsAction="never">
+    </item>
+    <item
+        android:id="@+id/action_import_export"
+        android:title="@string/action_import_export"
+        app:showAsAction="never">
+    </item>
+
     <group>
         <item
             android:id="@+id/action_add_figure"
@@ -80,24 +91,15 @@
         android:title="@string/action_save"
         app:showAsAction="never"/>
     <item
-        android:id="@+id/action_import"
-        android:title="@string/action_import"
-        app:showAsAction="never"/>
-    <item
-        android:id="@+id/action_export"
-        android:title="@string/action_export"
+        android:id="@+id/action_saveaspdf"
+        android:title="@string/action_saveaspdf"
         app:showAsAction="never"/>
     <item
         android:id="@+id/action_view"
         android:title="@string/action_view"
         app:showAsAction="never"/>
     <item
-        android:id="@+id/action_saveaspdf"
-        android:title="@string/action_saveaspdf"
-        app:showAsAction="never"/>
-    <item
         android:id="@+id/nav_Licence_Logiciel"
         android:title="@string/title_About"
         app:showAsAction="never"/>
-
 </menu>

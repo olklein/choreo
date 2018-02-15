@@ -65,6 +65,7 @@
         android:paddingBottom="1dp"
         android:background="@drawable/list_item_selector">
         <LinearLayout
+            android:id="@+id/item"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
@@ -134,8 +135,7 @@
                     android:textAppearance="@style/TextAppearance.AppCompat.Small"
                     android:paddingBottom="3dp"
                     android:layout_marginBottom="0dp"
-                    android:layout_marginTop="0dp"
-                    />
+                    android:layout_marginTop="0dp"/>
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>

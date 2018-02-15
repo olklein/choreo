@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- Copyright 2014 Magnus Woxblom
+<?xml version="1.0" encoding="utf-8"?><!-- Copyright 2014 Magnus Woxblom
 
      Licensed under the Apache License, Version 2.0 (the "License");
      you may not use this file except in compliance with the License.
@@ -75,7 +74,6 @@
     <string name="PD">Paso D.</string>
     <string name="JV">Jive</string>
     <string name="allDancesShort">Syll.</string>
-    <string name="action_import">Import</string>
     <string name="replace">Replace</string>
     <string name="UseThisIconToAddFigure">To add a figure</string>
     <string name="action_help">Useful tips:</string>
@@ -83,7 +81,8 @@
     <string name="moveFigure">To move a figure</string>
     <string name="UseThisIconToDelete">To delete a choreography</string>
     <string name="UseThisIconToOpenMainMenu">To open the choreography list</string>
-    I<string name="action_export">Export</string>
+    I
+    <string name="action_export">Export</string>
     <string name="action_show_syllabus">Show the syllabus</string>
     <string name="action_view">Edit as a text file</string>
     <string name="mail_text">Enclosed a choreo.</string>
@@ -96,17 +95,23 @@
     <string name="action_Licence_Logiciel_Info">This program is distributed under the terms of the GNU Affero General Public License, version 3, as published by the Free Software Foundation. It can be found at: &#13; https://github.com/olklein/choreo.</string>
     <string name="title_About">About</string>
     <string name="action_show_passport">Dance Passport</string>
-    <string name="action_show_passport_standard">Standard passport</string>
-    <string name="action_show_passport_yellow">Yellow</string>
-    <string name="action_show_passport_orange">Orange</string>
-    <string name="action_show_passport_green">Green</string>
-    <string name="action_show_passport_purple">Purple</string>
-    <string name="action_show_passport_blue">Blue</string>
-    <string name="action_show_passport_red">Red</string>
-    <string name="action_show_passport_latin">Latin Passport</string>
-    <string name="application_icon" />
-    <string name="passport">Dance Passport</string>
     <string name="action_show_passport_latin_or_standard">Dance type?</string>
     <string name="action_show_passport_for">Dance?</string>
     <string name="action_show_passport_level">Level?</string>
+    <string name="action_video">Video</string>
+    <string name="action_video_delete_or_show">Show or delete this video?</string>
+    <string name="showVideo">Show</string>
+    <string name="deleteVideo">Delete</string>
+    <string name="action_video_lost">Video not found!</string>
+    <string name="action_import_export">Import/Export</string>
+    <string name="action_video_loadongoing">Copy on going</string>
+    <string name="clickToPlay">Click here to play</string>
+    <string name="cleanupDone">Cleaning completed</string>
+    <string name="cleaning">Remove unnecessary copies</string>
+    <string name="removeVideo">Remove</string>
+    <string name="Title">Title:</string>
+    <string name="EnterVideoTitle">Enter a title</string>
+    <string name="Editer">Edit</string>
+    <string name="Video_Editor">Video:</string>
+    <string name="action_video_unreadable">File cannot be read!</string>
 </resources>

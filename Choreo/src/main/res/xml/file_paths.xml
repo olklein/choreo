@@ -5,7 +5,7 @@
         <external-path path="." name="external_storage_root" />
         <files-path name="choreo/files" path="/"/>
         <files-path name="choreo/cache" path="/"/>
+        <files-path name="choreo/videos" path="/"/>
         <!--<external-path path="/storage/emulated/0/Download/" name="choreo/download" />-->
-
 
 </paths>
