@@ -79,7 +79,7 @@ class PDFCreator {
 
 
     public void createPdf(Context ctxt, String filePath, String title, boolean withComment, Drawable drawable, ArrayList<DanceFigure> items, FileOutputStream outFile) {
-        new GetResults(ctxt, withComment, drawable, items, outFile).execute(filePath,title );
+        new GetResults(ctxt, withComment, drawable, items, outFile, filePath, title).execute();
     }
 
     static class MyFooter extends PdfPageEventHelper {
@@ -144,37 +144,61 @@ class PDFCreator {
             }
         }
     }
-    // new
+
     static class GetResults extends AsyncTask<String, Void, String> {
-        final Context ctxt;
-        String filename;
-        String filePath;
+        final NotificationManager mNotifyManager;
+        final String filename;
         final Drawable drawable;
         final FileOutputStream outFile;
         final boolean withComment;
         final private ArrayList<DanceFigure> mItemArray;
+        final NotificationCompat.Builder mBuilder;
 
-        GetResults(Context context, Boolean Comment, Drawable d, ArrayList<DanceFigure> items, FileOutputStream out){
-            ctxt= context;
+        GetResults(Context context, Boolean Comment, Drawable d, ArrayList<DanceFigure> items, FileOutputStream out, String filePath, String title){
+            Resources mResources = context.getResources();
+            mNotifyManager=(NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+            filename = title;
             drawable = d;
             outFile = out;
             withComment = Comment;
             mItemArray = items;
+
+            Uri fileURI;
+            File file = new File(filePath);
+
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                fileURI = getUriForFile(context, "com.olklein.choreo.fileProvider", file);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+                intent.setDataAndType(fileURI, "application/*");
+            }else{
+                fileURI= Uri.fromFile(file);
+                intent.setDataAndType(fileURI, "application/pdf");
+            }
+
+            intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_WRITE_URI_PERMISSION );
+
+            PendingIntent pIntent = PendingIntent.getActivity(context, 0, intent, 0);
+
+            mBuilder = new NotificationCompat.Builder(context);
+            int color = mResources.getColor(android.R.color.holo_blue_light);
+            mBuilder.setContentTitle(mResources.getString(R.string.app_name))
+                    .setContentText(mResources.getString(R.string.pdf_file_uploaded,filename))
+                    .setSmallIcon(android.R.drawable.stat_sys_download_done)
+                    .setContentIntent(pIntent)
+                    .setAutoCancel(true)
+                    .setColor(color);
+
         }
 
         @Override
         protected String doInBackground(String... params) {
 
-            filePath =params[0];
-            filename =params[1];
-
-            //headerTitle=filename;
             BaseFont bf = null;
             try {
                 bf = BaseFont.createFont("assets/fonts/FreeSans.ttf", BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
             } catch (DocumentException | IOException e) {
                 e.printStackTrace();
-                NotificationManager mNotifyManager=(NotificationManager) ctxt.getSystemService(Context.NOTIFICATION_SERVICE);
                 if (mNotifyManager != null) mNotifyManager.cancel(1234);
             }
 
@@ -191,7 +215,6 @@ class PDFCreator {
                 writer = PdfWriter.getInstance(document, outFile);
             } catch (DocumentException e) {
                 e.printStackTrace();
-                NotificationManager mNotifyManager=(NotificationManager) ctxt.getSystemService(Context.NOTIFICATION_SERVICE);
                 if (mNotifyManager != null) mNotifyManager.cancel(1234);
             }
             document.addTitle(filename);
@@ -237,7 +260,6 @@ class PDFCreator {
                     cell.setBorder(Rectangle.NO_BORDER);
                 }
                 Paragraph prg = new Paragraph(""+item.getTempo(), smallFont);
-                //cell.addElement(new Phrase(""+item.getTempo(), smallFont));
                 prg.setAlignment(Element.ALIGN_RIGHT);
                 cell.addElement(prg);
 
@@ -271,7 +293,6 @@ class PDFCreator {
                     document.close();
                 } catch (DocumentException e) {
                     e.printStackTrace();
-                    NotificationManager mNotifyManager=(NotificationManager) ctxt.getSystemService(Context.NOTIFICATION_SERVICE);
                     if (mNotifyManager != null) mNotifyManager.cancel(1234);
                 }
             }else{
@@ -285,47 +306,13 @@ class PDFCreator {
                     document.close();
                 } catch (DocumentException e) {
                     e.printStackTrace();
-                    NotificationManager mNotifyManager=(NotificationManager) ctxt.getSystemService(Context.NOTIFICATION_SERVICE);
                     if (mNotifyManager != null) mNotifyManager.cancel(1234);
                 }
             }
-
-
             return "Done";
         }
 
         protected void onPostExecute(String result) {
-            Resources resources = ctxt.getResources();
-            Uri fileURI;
-            File file = new File(filePath);
-            NotificationManager mNotifyManager;
-            NotificationCompat.Builder mBuilder;
-            mNotifyManager = (NotificationManager) ctxt.getSystemService(Context.NOTIFICATION_SERVICE);
-
-            Intent intent = new Intent(Intent.ACTION_VIEW);
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                fileURI = getUriForFile(ctxt, "com.olklein.choreo.fileProvider", file);
-                intent.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
-                intent.setDataAndType(fileURI, "application/*");
-            }else{
-                fileURI= Uri.fromFile(file);
-                intent.setDataAndType(fileURI, "application/pdf");
-            }
-
-            intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_WRITE_URI_PERMISSION );
-
-            PendingIntent pIntent = PendingIntent.getActivity(ctxt, 0, intent, 0);
-
-            mBuilder = new NotificationCompat.Builder(ctxt);
-            int color = resources.getColor(android.R.color.holo_blue_light);
-            mBuilder.setContentTitle(resources.getString(R.string.app_name))
-                    .setContentText(resources.getString(R.string.pdf_file_uploaded,filename))
-                    .setSmallIcon(android.R.drawable.stat_sys_download_done)
-                    .setContentIntent(pIntent)
-                    .setAutoCancel(true)
-                    .setColor(color);
-
             if (mNotifyManager != null){
                 mNotifyManager.notify(1235, mBuilder.build());
                 mNotifyManager.cancel(1234);

@@ -1,5 +1,6 @@
 package com.olklein.choreo;
 
+import android.content.ContentResolver;
 import android.content.Context;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -46,17 +47,16 @@ class BkgCopier {
     }
 
     static class GetResults extends AsyncTask<String, Void, String> {
-        final Context ctxt;
+        final ContentResolver mContentResolver;
         final Uri mUri;
         final File mDst;
         final File mDstTMP;
 
-
         GetResults(Context context,Uri uri, File dsttmp, File dst){
-            ctxt= context;
             mUri = uri;
             mDst = dst;
             mDstTMP = dsttmp;
+            mContentResolver = context.getContentResolver();
         }
 
         @Override
@@ -67,17 +67,15 @@ class BkgCopier {
                     Log.d("Choreo", "error during copy=");
                     e.printStackTrace();
                 }
-
             return "Done";
         }
 
         protected void onPostExecute(String result) {
             Log.d("Choreo", "Copy post execute");
             ListFragment.refresh(mDst);
-
         }
         private void copy(Uri uri, File dsttmp, File dst) throws IOException {
-            InputStream in = ctxt.getContentResolver().openInputStream(uri);
+            InputStream in = mContentResolver.openInputStream(uri);
             if (in != null) {
                 try {
                     OutputStream out = new FileOutputStream(dsttmp);

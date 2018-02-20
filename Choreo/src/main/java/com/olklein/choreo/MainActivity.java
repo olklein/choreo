@@ -1,30 +1,30 @@
-/**
- * Created by olklein on 06/07/2017.
- *
- *
- *    This program is free software: you can redistribute it and/or  modify
- *    it under the terms of the GNU Affero General Public License, version 3,
- *    as published by the Free Software Foundation.
- *
- *    This program is distributed in the hope that it will be useful,
- *    but WITHOUT ANY WARRANTY; without even the implied warranty of
- *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *    GNU Affero General Public License for more details.
- *
- *    You should have received a copy of the GNU Affero General Public License
- *    along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- *    As a special exception, the copyright holders give permission to link the
- *    code of portions of this program with the OpenSSL library under certain
- *    conditions as described in each individual source file and distribute
- *    linked combinations including the program with the OpenSSL library. You
- *    must comply with the GNU Affero General Public License in all respects
- *    for all of the code used other than as permitted herein. If you modify
- *    file(s) with this exception, you may extend this exception to your
- *    version of the file(s), but you are not obligated to do so. If you do not
- *    wish to do so, delete this exception statement from your version. If you
- *    delete this exception statement from all source files in the program,
- *    then also delete it in the license file.
+/*
+  Created by olklein on 06/07/2017.
+
+
+     This program is free software: you can redistribute it and/or  modify
+     it under the terms of the GNU Affero General Public License, version 3,
+     as published by the Free Software Foundation.
+
+     This program is distributed in the hope that it will be useful,
+     but WITHOUT ANY WARRANTY; without even the implied warranty of
+     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+     GNU Affero General Public License for more details.
+
+     You should have received a copy of the GNU Affero General Public License
+     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+     As a special exception, the copyright holders give permission to link the
+     code of portions of this program with the OpenSSL library under certain
+     conditions as described in each individual source file and distribute
+     linked combinations including the program with the OpenSSL library. You
+     must comply with the GNU Affero General Public License in all respects
+     for all of the code used other than as permitted herein. If you modify
+     file(s) with this exception, you may extend this exception to your
+     version of the file(s), but you are not obligated to do so. If you do not
+     wish to do so, delete this exception statement from your version. If you
+     delete this exception statement from all source files in the program,
+     then also delete it in the license file.
  */
 
 
@@ -32,8 +32,6 @@ package com.olklein.choreo;
 
 import android.Manifest;
 import android.annotation.TargetApi;
-import android.app.Activity;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
@@ -46,7 +44,6 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -65,42 +62,49 @@ import java.util.Comparator;
 public class MainActivity extends AppCompatActivity {
 
     private static final int MYWRITEREQUEST = 223;
-    public static int currentItem = 0;
+    private static int currentItem = 0;
     private static CharSequence mTitle;
-
-    private DrawerLayout mDrawerLayout;
-    private ListView mDrawerList;
-
-    public static Activity context;
     private static ActionBar mActionBar;
     private static FragmentManager mFragmentManager;
     private ActionBarDrawerToggle mDrawerToggle;
-
-    public static void setCurrentItem(int currentItem) {
-        MainActivity.currentItem = currentItem;
+    private static Fragment mFragment;
+    public static void setCurrentItem(int itemPosition) {
+        currentItem = itemPosition;
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_drawer);
-        context = this;
         mActionBar = getSupportActionBar();
         mFragmentManager = getSupportFragmentManager();
-        ChoreographerConstants.init(this.getBaseContext());
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, MYWRITEREQUEST);
         } else {
             mTitle = getTitle();
-            mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
-            mDrawerList = (ListView) findViewById(R.id.left_drawer);
+            ListView mDrawerList = (ListView) findViewById(R.id.left_drawer);
+            File home = getExternalFilesDir(null);
 
-            DanceCustomAdapter danceListAdapter = new DanceCustomAdapter(this, R.layout.dance_custom_list, ChoreographerConstants.DANCE_LIST_FILENAME);
-
+            if (home!=null) ChoreographerConstants.init(home.getPath());
+            FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+            fab.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    ((ListFragment) mFragment).onNewFileClick();
+                }
+            });
+            DrawerLayout mDrawerLayout =(DrawerLayout) findViewById(R.id.drawer_layout);
+            DanceCustomAdapter danceListAdapter =
+                    new DanceCustomAdapter(this, R.layout.dance_custom_list,
+                            ChoreographerConstants.DANCE_LIST_FILENAME,mDrawerLayout);
             mDrawerList.setAdapter(danceListAdapter);
             // Set the list's click listener
             mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
-                selectItem(currentItem);
+            ListFragment fragment = new ListFragment();
+            fragment.setDrawer(mDrawerLayout);
+
+
+            selectItem(fragment,currentItem,mDrawerLayout,mDrawerList);
             if (currentItem>=0) {
                 setTitle(ChoreographerConstants.DANCE_LIST_FILENAME[currentItem]);
             }
@@ -113,7 +117,7 @@ public class MainActivity extends AppCompatActivity {
 
                 mDrawerToggle = new ActionBarDrawerToggle(
                         this,                  /* host Activity */
-                        mDrawerLayout,         /* DrawerLayout object */
+                        (DrawerLayout) findViewById(R.id.drawer_layout),         /* DrawerLayout object */
                         R.string.drawer_open,  /* "open drawer" description */
                         R.string.drawer_close  /* "close drawer" description */
                 ) {
@@ -131,7 +135,6 @@ public class MainActivity extends AppCompatActivity {
                 };
 
 
-                // Set the drawer toggle as the DrawerListener
                 mDrawerLayout.addDrawerListener(mDrawerToggle);
                 if (ChoreographerConstants.DANCE_LIST_FILENAME!=null && ChoreographerConstants.DANCE_LIST_FILENAME.length==0){
                     mActionBar.setDisplayHomeAsUpEnabled(false);
@@ -182,16 +185,28 @@ public class MainActivity extends AppCompatActivity {
             case MYWRITEREQUEST: {             // If request is cancelled, the result arrays are empty.
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     mTitle = getTitle();
-                    mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
-                    mDrawerList = (ListView) findViewById(R.id.left_drawer);
-
-                    //if (danceListAdapter == null)
-                    DanceCustomAdapter   danceListAdapter = new DanceCustomAdapter(this, R.layout.dance_custom_list, ChoreographerConstants.DANCE_LIST_FILENAME);
+                    ListView mDrawerList = (ListView) findViewById(R.id.left_drawer);
+                    File home = getExternalFilesDir(null);
+                    if (home!=null) ChoreographerConstants.init(home.getPath());
+                    FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+                    fab.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            ((ListFragment) mFragment).onNewFileClick();
+                        }
+                    });
+                    DrawerLayout drawer =(DrawerLayout) findViewById(R.id.drawer_layout);
+                    DanceCustomAdapter   danceListAdapter =
+                            new DanceCustomAdapter(this, R.layout.dance_custom_list,
+                                    ChoreographerConstants.DANCE_LIST_FILENAME,drawer);
 
                     mDrawerList.setAdapter(danceListAdapter);
                     // Set the list's click listener
                     mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
-                    selectItem(currentItem);
+                    ListFragment fragment = new ListFragment();
+                    fragment.setDrawer(drawer);
+
+                    selectItem(fragment,currentItem,drawer,mDrawerList);
                     setTitle(ChoreographerConstants.DANCE_LIST_FILENAME[currentItem]);
                     Syllabus.init(this);
                     ActionBar actionBar = getSupportActionBar();
@@ -224,27 +239,18 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
-    public static void doSelectItem(int currentItem) {
-        selectItem(currentItem);
-    }
-
-    public static boolean isDrawerOpen() {
-
-        DrawerLayout dr = (DrawerLayout) context.findViewById(R.id.drawer_layout);
-        if (dr!=null) {
-            return dr.isDrawerOpen(GravityCompat.START);
-        }else{
-            return false;
-        }
-    }
-
 
     private class DrawerItemClickListener implements ListView.OnItemClickListener {
         @Override
         public void onItemClick(AdapterView parent, View view, int position, long id) {
             if (position<ChoreographerConstants.DANCE_LIST_NAME.length) {
                 currentItem = position;
-                selectItem(currentItem);
+                DrawerLayout drawer =(DrawerLayout) findViewById(R.id.drawer_layout);
+                ListView mDrawerList = (ListView) findViewById(R.id.left_drawer);
+                ListFragment fragment = new ListFragment();
+                fragment.setDrawer(drawer);
+
+                selectItem(fragment,currentItem,drawer,mDrawerList);
             }
         }
     }
@@ -252,51 +258,41 @@ public class MainActivity extends AppCompatActivity {
     /**
      * Swaps fragments in the main content view
      */
-    private static void selectItem(int position) {
-
+    public static void selectItem(ListFragment fragment, int position, DrawerLayout drawer, ListView drawerList) {
+        if (position == -1){
+            position = currentItem;
+        }
         // Create a new fragment
-        final Fragment fragment = ListFragment.newInstance();
-        //
-        FloatingActionButton fab = (FloatingActionButton) context.findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                ((ListFragment) fragment).onNewFileClick(context);
-            }
-        });
+        mFragment = fragment;
 
         Bundle args = new Bundle();
         if (position >=0 && position<ChoreographerConstants.DANCE_LIST_NAME.length) {
             args.putString(ChoreographerConstants.TITLENAME, ChoreographerConstants.DANCE_LIST_NAME[position]);
             args.putString(ChoreographerConstants.FILE, ChoreographerConstants.DANCE_LIST_FILENAME[position]);
 
-            fragment.setArguments(args);
-            showFragment(fragment);
+            mFragment.setArguments(args);
+            showFragment(mFragment);
 
             mTitle = ChoreographerConstants.DANCE_LIST_NAME[position];
             // setting Toolbar as Action Bar for the App
             if (mActionBar!= null) mActionBar.setTitle(mTitle);
 
-            DrawerLayout drawer =(DrawerLayout) context.findViewById(R.id.drawer_layout);
-            ListView drawerList = (ListView) context.findViewById(R.id.left_drawer);
             ((DanceCustomAdapter)drawerList.getAdapter()).setClicked(position);
             drawer.closeDrawer(drawerList);
         }else {
             args.putString(ChoreographerConstants.TITLENAME, "");
             args.putString(ChoreographerConstants.FILE, "");
 
-            fragment.setArguments(args);
-            showFragment(fragment);
+            mFragment.setArguments(args);
+            showFragment(mFragment);
 
             mTitle = "";
             // setting Toolbar as Action Bar for the App
             if (mActionBar!= null) mActionBar.setTitle(mTitle);
 
-            DrawerLayout drawer =(DrawerLayout) context.findViewById(R.id.drawer_layout);
-            ListView drawerList = (ListView) context.findViewById(R.id.left_drawer);
             ((DanceCustomAdapter)drawerList.getAdapter()).setClicked(position);
             drawer.closeDrawer(drawerList);
-        }
+       }
     }
 
     @Override
@@ -312,7 +308,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void openQuitDialog() {
-        final android.app.AlertDialog.Builder quitDialog = new android.app.AlertDialog.Builder(MainActivity.this);
+        final android.app.AlertDialog.Builder quitDialog = new android.app.AlertDialog.Builder(this);
         quitDialog.setTitle(R.string.button_confirm);
         quitDialog.setNegativeButton(R.string.menu_cancel, new DialogInterface.OnClickListener() {
 
@@ -323,15 +319,14 @@ public class MainActivity extends AppCompatActivity {
         quitDialog.setPositiveButton(R.string.menu_exit, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface arg0, int arg1) {
-                saveBeforeToQuit(context);
+                saveBeforeToQuit();
             }
         });
         quitDialog.setIcon(R.mipmap.ic_launcher);
         quitDialog.show();
     }
-    private void saveBeforeToQuit(Context context){
-        File home = context.getExternalFilesDir(null);
-
+    private void saveBeforeToQuit(){
+        File home = getExternalFilesDir(null);
         ArrayList<String> fileList= new ArrayList<>();
 
         if (null != home){
@@ -357,81 +352,89 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
 
-            saveItOrNotDialog(context,fileList);
+            saveItOrNotDialog(fileList);
         }else{
             removeEmptyFiles();
-            ChoreographerConstants.init(context);
-            DanceCustomAdapter danceListAdapter = new DanceCustomAdapter(context, R.layout.dance_custom_list, ChoreographerConstants.DANCE_LIST_FILENAME);
+            if (home!=null) ChoreographerConstants.init(home.getPath());
+            DrawerLayout drawer =(DrawerLayout) findViewById(R.id.drawer_layout);
 
-            ListView drawerList = (ListView) MainActivity.this.findViewById(R.id.left_drawer);
+            DanceCustomAdapter danceListAdapter =
+                    new DanceCustomAdapter(this, R.layout.dance_custom_list,
+                            ChoreographerConstants.DANCE_LIST_FILENAME,drawer);
 
+            ListView drawerList = (ListView) findViewById(R.id.left_drawer);
             drawerList.setAdapter(danceListAdapter);
             setCurrentItem(0);
-            selectItem(0);
+            ListFragment fragment = new ListFragment();
+            fragment.setDrawer(drawer);
+            selectItem(fragment,0,drawer,drawerList);
             MainActivity.this.finishAffinity();
-
         }
     }
 
     private void removeEmptyFiles() {
-        File home = context.getExternalFilesDir(null);
+        File home = this.getExternalFilesDir(null);
 
         ArrayList<String> fileList= new ArrayList<>();
 
-        if (null != home){
-            if (home.exists()){
+        if (null != home) {
+            if (home.exists()) {
                 Log.d("Files", home.getAbsolutePath());
             }
-            if (home.isDirectory()){
+            if (home.isDirectory()) {
                 File[] listOfFiles = home.listFiles();
                 for (File file : listOfFiles) {
                     String filename = file.getName();
-                    if (!file.isDirectory()){
+                    if (!file.isDirectory()) {
                         fileList.add(filename);
                     }
                 }
             }
-        }
-        if (fileList.size()>0) {
-            Collections.sort(fileList, new Comparator<String>() {
-                @Override
-                public int compare(String s1, String s2) {
-                    return s1.compareTo(s2);
-                }
-            });
 
-            for (String name : fileList) {
-                String filePath = context.getExternalFilesDir(null)+"/"+name;
-                File file = new File(filePath);
-                if (file.length()==0 && file.exists()){
-                    boolean isDeleted = file.delete();
-                    String TAG = "DANCE";
-                    Log.d(TAG,"Deleted("+name+")="+(isDeleted?"true":"false"));
+            if (fileList.size() > 0) {
+                Collections.sort(fileList, new Comparator<String>() {
+                    @Override
+                    public int compare(String s1, String s2) {
+                        return s1.compareTo(s2);
+                    }
+                });
+
+                for (String name : fileList) {
+                    String filePath = home.getPath() + "/" + name;
+
+                    File file = new File(filePath);
+                    if (file.length() == 0 && file.exists()) {
+                        boolean isDeleted = file.delete();
+                        String TAG = "DANCE";
+                        Log.d(TAG, "Deleted(" + name + ")=" + (isDeleted ? "true" : "false"));
+                    }
                 }
             }
         }
     }
 
 
-    private  void saveItOrNotDialog(final Context context, final ArrayList<String> list) {
+    private  void saveItOrNotDialog(final ArrayList<String> list) {
         final String name;
-        if (list.size() > 0) {
+        File home = getExternalFilesDir(null);
+        if (list.size() > 0 && home !=null) {
+            final String homePath = home.getPath();
             name = list.get(0);
             list.remove(0);
-            final android.app.AlertDialog.Builder saveItOrNotDialog = new android.app.AlertDialog.Builder(context);
-            String title = context.getResources().getString(R.string.saveitornot) + " " + name.replace("onscreen", "");
+            final android.app.AlertDialog.Builder saveItOrNotDialog = new android.app.AlertDialog.Builder(this);
+            String title = getResources().getString(R.string.saveitornot) + " " + name.replace("onscreen", "");
             saveItOrNotDialog.setTitle(title);
 
             // Save button: rename filenameOnScreen to filename.
             saveItOrNotDialog.setNegativeButton(R.string.save, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface arg0, int arg1) {
-                    String filePathFrom = context.getExternalFilesDir(null) + "/" + name;
-                    String filePathTo = context.getExternalFilesDir(null) + "/" + name.replace("onscreen", "");
+                    String filePathFrom = homePath + "/" + name;
+                    String filePathTo = homePath + "/" + name.replace("onscreen", "");
                     File from = new File(filePathFrom);
                     File to = new File(filePathTo);
                     from.renameTo(to);
-                    saveItOrNotDialog(context, list);
+                    saveItOrNotDialog(list);
                 }
             });
             // Cancel button: Do not save the file and stop the loop.
@@ -444,10 +447,10 @@ public class MainActivity extends AppCompatActivity {
             saveItOrNotDialog.setNeutralButton(R.string.dontsave, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface arg0, int arg1) {
-                    String filePathFrom = context.getExternalFilesDir(null) + "/" + name;
+                    String filePathFrom = homePath + "/" + name;
                     File from = new File(filePathFrom);
                     from.delete();
-                    saveItOrNotDialog(context, list);
+                    saveItOrNotDialog(list);
                 }
             });
 
@@ -455,13 +458,21 @@ public class MainActivity extends AppCompatActivity {
             saveItOrNotDialog.show();
         }else{
             removeEmptyFiles();
-            ChoreographerConstants.init(context);
-            DanceCustomAdapter danceListAdapter = new DanceCustomAdapter(context, R.layout.dance_custom_list, ChoreographerConstants.DANCE_LIST_FILENAME);
-            ListView drawerList = (ListView) MainActivity.context.findViewById(R.id.left_drawer);
+            if (home!=null) ChoreographerConstants.init(home.getPath());
+
+            DrawerLayout drawer =(DrawerLayout) findViewById(R.id.drawer_layout);
+            DanceCustomAdapter danceListAdapter =
+                    new DanceCustomAdapter(MainActivity.this, R.layout.dance_custom_list,
+                            ChoreographerConstants.DANCE_LIST_FILENAME,drawer);
+            ListView drawerList = (ListView) findViewById(R.id.left_drawer);
+
             drawerList.setAdapter(danceListAdapter);
 
             setCurrentItem(0);
-            selectItem(0);
+            ListFragment fragment = new ListFragment();
+            fragment.setDrawer(drawer);
+
+            selectItem(fragment,0, drawer,drawerList);
             MainActivity.this.finishAffinity();
         }
     }

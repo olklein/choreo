@@ -50,15 +50,23 @@ class BkgCheckUnused {
     }
 
     static class Clean extends AsyncTask<String, Void, String> {
-        final Context ctxt;
+        final NotificationCompat.Builder mBuilder;
+        final Resources mResources ;
+        final NotificationManager mNotifyManager;
+        final File mHome;
+        final File mHomeMovies;
 
         Clean(Context context) {
-            ctxt = context;
+            mBuilder = new NotificationCompat.Builder(context);
+            mResources = context.getResources();
+            mNotifyManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+            mHome = context.getExternalFilesDir(null);
+            mHomeMovies =  context.getExternalFilesDir(Environment.DIRECTORY_MOVIES);
         }
 
-        private void checkAndRemoveUnused(Context context) {
-            ArrayList<File> movieFileList = getFileList(context, Environment.DIRECTORY_MOVIES);
-            ArrayList<File> fileList = getFileList(context, null);
+        private void checkAndRemoveUnused() {
+            ArrayList<File> movieFileList = getFileList(mHomeMovies);
+            ArrayList<File> fileList = getFileList(mHome);
             boolean used;
             for (File movie : movieFileList) {
                 String movieFileName = movie.getAbsolutePath();
@@ -80,20 +88,15 @@ class BkgCheckUnused {
 
         @Override
         protected String doInBackground(String... params) {
-            checkAndRemoveUnused(ctxt);
+            checkAndRemoveUnused();
             return "Done";
         }
 
         protected void onPostExecute(String result) {
-            Resources resources = ctxt.getResources();
-            NotificationManager mNotifyManager;
-            NotificationCompat.Builder mBuilder;
-            mNotifyManager = (NotificationManager) ctxt.getSystemService(Context.NOTIFICATION_SERVICE);
 
-            mBuilder = new NotificationCompat.Builder(ctxt);
-            int color = resources.getColor(android.R.color.holo_blue_light);
-            mBuilder.setContentTitle(resources.getString(R.string.app_name))
-                    .setContentText(resources.getString(R.string.cleanupDone))
+            int color = mResources.getColor(android.R.color.holo_blue_light);
+            mBuilder.setContentTitle(mResources.getString(R.string.app_name))
+                    .setContentText(mResources.getString(R.string.cleanupDone))
                     .setSmallIcon(android.R.drawable.ic_dialog_info)
                     .setAutoCancel(true)
                     .setColor(color);
@@ -104,7 +107,7 @@ class BkgCheckUnused {
     }
 
     static private boolean isFileContains(File file, String movieFileName)  {
-        InputStream inputStream = null;
+        InputStream inputStream;
         try {
             String filePath =file.getPath();
             inputStream = new FileInputStream(filePath);
@@ -126,9 +129,7 @@ class BkgCheckUnused {
     }
 
 
-    static private ArrayList<File> getFileList(Context context, String type){
-        File home = context.getExternalFilesDir(type);
-
+    static private ArrayList<File> getFileList(File home){
         ArrayList<File> fileList= new ArrayList<>();
 
         if (null != home){

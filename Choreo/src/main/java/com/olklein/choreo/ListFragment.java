@@ -1,32 +1,32 @@
 package com.olklein.choreo;
 
-/**
- * Created by olklein on 06/07/2017.
- *
- *
- *    This program is free software: you can redistribute it and/or  modify
- *    it under the terms of the GNU Affero General Public License, version 3,
- *    as published by the Free Software Foundation.
- *
- *    This program is distributed in the hope that it will be useful,
- *    but WITHOUT ANY WARRANTY; without even the implied warranty of
- *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *    GNU Affero General Public License for more details.
- *
- *    You should have received a copy of the GNU Affero General Public License
- *    along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- *    As a special exception, the copyright holders give permission to link the
- *    code of portions of this program with the OpenSSL library under certain
- *    conditions as described in each individual source file and distribute
- *    linked combinations including the program with the OpenSSL library. You
- *    must comply with the GNU Affero General Public License in all respects
- *    for all of the code used other than as permitted herein. If you modify
- *    file(s) with this exception, you may extend this exception to your
- *    version of the file(s), but you are not obligated to do so. If you do not
- *    wish to do so, delete this exception statement from your version. If you
- *    delete this exception statement from all source files in the program,
- *    then also delete it in the license file.
+/*
+  Created by olklein on 06/07/2017.
+
+
+     This program is free software: you can redistribute it and/or  modify
+     it under the terms of the GNU Affero General Public License, version 3,
+     as published by the Free Software Foundation.
+
+     This program is distributed in the hope that it will be useful,
+     but WITHOUT ANY WARRANTY; without even the implied warranty of
+     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+     GNU Affero General Public License for more details.
+
+     You should have received a copy of the GNU Affero General Public License
+     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+     As a special exception, the copyright holders give permission to link the
+     code of portions of this program with the OpenSSL library under certain
+     conditions as described in each individual source file and distribute
+     linked combinations including the program with the OpenSSL library. You
+     must comply with the GNU Affero General Public License in all respects
+     for all of the code used other than as permitted herein. If you modify
+     file(s) with this exception, you may extend this exception to your
+     version of the file(s), but you are not obligated to do so. If you do not
+     wish to do so, delete this exception statement from your version. If you
+     delete this exception statement from all source files in the program,
+     then also delete it in the license file.
  */
 
 import android.app.NotificationManager;
@@ -45,6 +45,7 @@ import android.provider.MediaStore;
 import android.provider.OpenableColumns;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
@@ -116,20 +117,24 @@ public class ListFragment extends Fragment {
     private boolean isSyllabus=false;
     private static String mExternalFilesDir;
     private static String mLoadingFileString;
+    private DrawerLayout mDrawer;
 
-
-    public static ListFragment newInstance() {
-        return new ListFragment();
+    public void setDrawer(DrawerLayout drawer)
+    {
+        mDrawer = drawer;
     }
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mExternalFilesDir = getActivity().getBaseContext().getExternalFilesDir(null)+"/";
+        File home = getActivity().getExternalFilesDir(null);
+
+        if (home!=null) {
+            mExternalFilesDir = home.getPath();
+        }
+
         Bundle bundle = getArguments();
         dance_file = bundle.getString(ChoreographerConstants.FILE);
         mLoadingFileString = getString(R.string.action_video_loadongoing);
-
         sCreatedItems = 0;
         setHasOptionsMenu(true);
         AppCompatDelegate.setCompatVectorFromResourcesEnabled(true);
@@ -139,12 +144,13 @@ public class ListFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         final View view = inflater.inflate(R.layout.list_layout, container, false);
+
         Bundle bundle = getArguments();
 
         dance_file = bundle.getString(ChoreographerConstants.FILE);
 
         if (dance_file != null && dance_file.equals("")){
-            onNewFileClick( getContext());
+            onNewFileClick();
             onOpenFirstFile (getContext());
         }
 
@@ -167,7 +173,6 @@ public class ListFragment extends Fragment {
                         e.printStackTrace();
                     }
                 }
-                //
             }
         });
 
@@ -216,7 +221,12 @@ public class ListFragment extends Fragment {
         menu.findItem(Syllabus.getDanceId()).setChecked(true);
         menu.findItem(R.id.action_syllabus).setTitle(getResources().getString(R.string.syllabus) + ": " + Syllabus.getName());
         menu.findItem(R.id.action_syllabus).setTitleCondensed(Syllabus.getDanceShortName());
-        if (MainActivity.isDrawerOpen()) {
+        DrawerLayout dr = (DrawerLayout) this.getActivity().findViewById(R.id.drawer_layout);
+        Boolean isDrawerOpen= false;
+        if (dr!=null) {
+            isDrawerOpen = dr.isDrawerOpen(GravityCompat.START);
+        }
+        if (isDrawerOpen) {
             menu.findItem(R.id.action_syllabus).setVisible(false);
             menu.findItem(R.id.action_show_comment).setVisible(false);
             menu.findItem(R.id.action_hide_comment).setVisible(false);
@@ -248,7 +258,6 @@ public class ListFragment extends Fragment {
                     menu.findItem(R.id.action_save).setVisible(false);
                     menu.findItem(R.id.action_saveaspdf).setVisible(false);
                     menu.findItem(R.id.action_import_export).setVisible(true);
-                    //menu.findItem(R.id.action_export).setVisible(false);
                     menu.findItem(R.id.action_new).setVisible(true);
                 }else{
                     menu.findItem(R.id.action_add_figure).setVisible(true);
@@ -288,7 +297,7 @@ public class ListFragment extends Fragment {
         switch (item.getItemId()) {
             case R.id.action_new:
             {
-                onNewFileClick(getContext());
+                onNewFileClick();
             }
             return true;
             case R.id.action_view:
@@ -297,7 +306,7 @@ public class ListFragment extends Fragment {
                 Intent exportIntent = new Intent(Intent.ACTION_VIEW);
                 Uri fileURI;
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    File path = new File(getContext().getExternalFilesDir(null), "");
+                    File path = new File(mExternalFilesDir, "");
                     File newFile = new File(path, dance_file+"onscreen");
                     if (!newFile.exists())  newFile = new File(path, dance_file);
                     fileURI= getUriForFile(getContext(), "com.olklein.choreo.fileProvider", newFile);
@@ -305,9 +314,9 @@ public class ListFragment extends Fragment {
                     exportIntent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_WRITE_URI_PERMISSION );
                     startActivity(Intent.createChooser(exportIntent, resource.getString(R.string.action_view)));
                 }else {
-                    String filePath = getActivity().getBaseContext().getExternalFilesDir(null)+"/"+dance_file+"onscreen";
+                    String filePath = mExternalFilesDir+"/"+dance_file+"onscreen";
                     File newFile = new File(filePath);
-                    if (!newFile.exists())  filePath = getActivity().getBaseContext().getExternalFilesDir(null)+"/"+dance_file;
+                    if (!newFile.exists())  filePath = mExternalFilesDir+"/"+dance_file;
                     fileURI = Uri.fromFile(new File(filePath));
                     exportIntent.setDataAndType(fileURI,"text/plain");
                     exportIntent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_WRITE_URI_PERMISSION );
@@ -315,128 +324,92 @@ public class ListFragment extends Fragment {
                 }
                 return true;
             }
-/////////////
             case R.id.action_import_export: {
                 final Context context = getContext();
-                {
-                    final AlertDialog.Builder  alert = new AlertDialog.Builder(context);
-                    alert.setIcon(R.mipmap.ic_launcher);
-                    alert.setTitle(R.string.action_import_export);
-                    alert.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int whichButton) {
-                            // Canceled.
-                        }
-                    });
 
-                    final ArrayAdapter<String> CommandsArrayAdapter = new ArrayAdapter<String> (context, android.R.layout.simple_list_item_1 ) {
-                        @Override
-                        public View getView(int position, View convertView, ViewGroup parent) {
-                            View view = super.getView(position, convertView, parent);
-                            TextView text1 = (TextView) view.findViewById(android.R.id.text1);
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-                                text1.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
-                            }
-                            text1.setBackgroundResource(R.drawable.borderfilled);
-                            return view;
+                final AlertDialog.Builder  alert = new AlertDialog.Builder(context);
+                alert.setIcon(R.mipmap.ic_launcher);
+                alert.setTitle(R.string.action_import_export);
+                alert.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+                        // Canceled.
+                    }
+                });
+
+                final ArrayAdapter<String> CommandsArrayAdapter = new ArrayAdapter<String> (context, android.R.layout.simple_list_item_1 ) {
+                    @Override
+                    public View getView(int position, View convertView, ViewGroup parent) {
+                        View view = super.getView(position, convertView, parent);
+                        TextView text1 = (TextView) view.findViewById(android.R.id.text1);
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+                            text1.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
                         }
-                    };
-                    if (dance_file.equals("")) {
-                        if(!isSyllabus) {
-                            if (dance_file.equals("")) {
-                                String type =context.getResources().getStringArray(R.array.ImportExportCommands)[0];
-                                CommandsArrayAdapter.add(type);
-                            }else{
-                                for (String type :context.getResources().getStringArray(R.array.ImportExportCommands))
-                                {
-                                    CommandsArrayAdapter.add(type);
-                                }
-                            }
-                        }
-                    }else{
-                        for (String type :context.getResources().getStringArray(R.array.ImportExportCommands))
-                        {
+                        text1.setBackgroundResource(R.drawable.borderfilled);
+                        return view;
+                    }
+                };
+                if (dance_file.equals("")) {
+                    if(!isSyllabus) {
+                        if (dance_file.equals("")) {
+                            String type =context.getResources().getStringArray(R.array.ImportExportCommands)[0];
                             CommandsArrayAdapter.add(type);
+                        }else{
+                            for (String type :context.getResources().getStringArray(R.array.ImportExportCommands))
+                            {
+                                CommandsArrayAdapter.add(type);
+                            }
                         }
                     }
-                    alert.setAdapter(CommandsArrayAdapter, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int command) {
-                            {
-                                if (command == 0) {
-                                    Intent si = new Intent(Intent.ACTION_GET_CONTENT);
-                                    si.setType("*/*");
-                                    startActivityForResult(si, IMPORT_REQUEST);
-                                }
-                                if (command == 1) {
-                                    Resources resource = getContext().getResources();
-                                    Intent exportIntent = new Intent(Intent.ACTION_SEND);
-
-                                    Uri fileURI;
-                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                                        File path = new File(getContext().getExternalFilesDir(null), "");
-                                        File newFile = new File(path, dance_file+"onscreen");
-                                        if (!newFile.exists())  newFile = new File(path, dance_file);
-                                        fileURI= getUriForFile(getContext(), "com.olklein.choreo.fileProvider", newFile);
-                                    }else {
-                                        String filePath = getActivity().getBaseContext().getExternalFilesDir(null)+"/"+dance_file+"onscreen";
-                                        File newFile = new File(filePath);
-                                        if (!newFile.exists())  filePath = getActivity().getBaseContext().getExternalFilesDir(null)+"/"+dance_file;
-                                        fileURI = Uri.fromFile(new File(filePath));
-                                    }
-
-                                    exportIntent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_WRITE_URI_PERMISSION );
-                                    exportIntent.putExtra(Intent.EXTRA_STREAM, fileURI);
-                                    exportIntent.setType("*/*");
-
-                                    exportIntent.putExtra(Intent.EXTRA_SUBJECT, resource.getString(R.string.mail_subjet, dance_file));
-                                    exportIntent.putExtra(Intent.EXTRA_TEXT, resource.getString(R.string.mail_text));
-                                    exportIntent.setType("message/rfc822");
-                                    startActivity(Intent.createChooser(exportIntent, resource.getString(R.string.action_export)));
-                                }
-                            }
-                        }
-                    });
-
-                    final AlertDialog dialog = alert.create();
-                    dialog.show();
+                }else{
+                    for (String type :context.getResources().getStringArray(R.array.ImportExportCommands))
+                    {
+                        CommandsArrayAdapter.add(type);
+                    }
                 }
+                alert.setAdapter(CommandsArrayAdapter, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int command) {
+
+                        if (command == 0) {
+                            Intent si = new Intent(Intent.ACTION_GET_CONTENT);
+                            si.setType("*/*");
+                            startActivityForResult(si, IMPORT_REQUEST);
+                        }
+                        if (command == 1) {
+                            Resources resource = getContext().getResources();
+                            Intent exportIntent = new Intent(Intent.ACTION_SEND);
+
+                            Uri fileURI;
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                                File path = new File(mExternalFilesDir, "");
+                                File newFile = new File(path, dance_file+"onscreen");
+                                if (!newFile.exists())  newFile = new File(path, dance_file);
+                                fileURI= getUriForFile(getContext(), "com.olklein.choreo.fileProvider", newFile);
+                            }else {
+                                String filePath = mExternalFilesDir+"/"+dance_file+"onscreen";
+                                File newFile = new File(filePath);
+                                if (!newFile.exists())  filePath = mExternalFilesDir+"/"+dance_file;
+                                fileURI = Uri.fromFile(new File(filePath));
+                            }
+
+                            exportIntent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_WRITE_URI_PERMISSION );
+                            exportIntent.putExtra(Intent.EXTRA_STREAM, fileURI);
+                            exportIntent.setType("*/*");
+
+                            exportIntent.putExtra(Intent.EXTRA_SUBJECT, resource.getString(R.string.mail_subjet, dance_file));
+                            exportIntent.putExtra(Intent.EXTRA_TEXT, resource.getString(R.string.mail_text));
+                            exportIntent.setType("message/rfc822");
+                            startActivity(Intent.createChooser(exportIntent, resource.getString(R.string.action_export)));
+                        }
+
+                    }
+                });
+
+                final AlertDialog dialog = alert.create();
+                dialog.show();
+
                 return true;
             }
-//            case R.id.action_import: {
-//                Intent si = new Intent(Intent.ACTION_GET_CONTENT);
-//                si.setType("*/*");
-//                startActivityForResult(si, IMPORT_REQUEST);
-//                return true;
-//            }
-//            case R.id.action_export:
-//            {
-//                Resources resource = getContext().getResources();
-//                Intent exportIntent = new Intent(Intent.ACTION_SEND);
-//
-//                Uri fileURI;
-//                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-//                    File path = new File(getContext().getExternalFilesDir(null), "");
-//                    File newFile = new File(path, dance_file+"onscreen");
-//                    if (!newFile.exists())  newFile = new File(path, dance_file);
-//                    fileURI= getUriForFile(getContext(), "com.olklein.choreo.fileProvider", newFile);
-//                }else {
-//                    String filePath = getActivity().getBaseContext().getExternalFilesDir(null)+"/"+dance_file+"onscreen";
-//                    File newFile = new File(filePath);
-//                    if (!newFile.exists())  filePath = getActivity().getBaseContext().getExternalFilesDir(null)+"/"+dance_file;
-//                    fileURI = Uri.fromFile(new File(filePath));
-//                }
-//
-//                exportIntent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_WRITE_URI_PERMISSION );
-//                exportIntent.putExtra(Intent.EXTRA_STREAM, fileURI);
-//                exportIntent.setType("*/*");
-//
-//                exportIntent.putExtra(Intent.EXTRA_SUBJECT, resource.getString(R.string.mail_subjet, dance_file));
-//                exportIntent.putExtra(Intent.EXTRA_TEXT, resource.getString(R.string.mail_text));
-//                exportIntent.setType("message/rfc822");
-//                startActivity(Intent.createChooser(exportIntent, resource.getString(R.string.action_export)));
-//                return true;
-//
-//            }
             case R.id.action_save:
             {
                 final Context context = getContext();
@@ -458,16 +431,19 @@ public class ListFragment extends Fragment {
                         if (name.equals(dance_file)){
                             try {
                                 saveDance(dance_file);
-                                deleteTemporaryFile(context, dance_file);
+                                deleteTemporaryFile(dance_file);
                                 mItemArray.clear();
                                 if (listAdapter != null) listAdapter.notifyDataSetChanged();
-                                loadDance();
+                                loadDance(dance_file);
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
-                            ChoreographerConstants.init(context);
-                            DanceCustomAdapter danceListAdapter = new DanceCustomAdapter(context, R.layout.dance_custom_list, ChoreographerConstants.DANCE_LIST_FILENAME);
-                            ListView drawerList = (ListView) MainActivity.context.findViewById(R.id.left_drawer);
+                            ChoreographerConstants.init(mExternalFilesDir);
+                            DanceCustomAdapter danceListAdapter = new DanceCustomAdapter(context,
+                                    R.layout.dance_custom_list,
+                                    ChoreographerConstants.DANCE_LIST_FILENAME,
+                                    mDrawer);
+                            ListView drawerList = (ListView) getActivity().findViewById(R.id.left_drawer);
                             drawerList.setAdapter(danceListAdapter);
                             int index = ChoreographerConstants.getIndex(dance_file);
                             if (index != -1) {
@@ -484,7 +460,7 @@ public class ListFragment extends Fragment {
                             }
                             getActivity().supportInvalidateOptionsMenu();
                         }else {
-                            File testFile = new File(getActivity().getBaseContext().getExternalFilesDir(null) + "/" + name);
+                            File testFile = new File(mExternalFilesDir + "/" + name);
                             // name may just differ from the case point of view. So we check if the file exist
                             if (name.toLowerCase().equals(dance_file.toLowerCase())) {
                                 final android.app.AlertDialog.Builder alreadyExistDialog = new android.app.AlertDialog.Builder(context);
@@ -499,7 +475,7 @@ public class ListFragment extends Fragment {
                                             dance_file = input1.getText().toString();
                                             // Non case sensitive management
                                             try {
-                                                String filePath = getContext().getExternalFilesDir(null) + "/" + dance_file;
+                                                String filePath = mExternalFilesDir+ "/" + dance_file;
                                                 File file = new File(filePath);
                                                 boolean deleted = file.delete();
                                                 Log.d(TAG, "Deleted=" + (deleted ? "true" : "false"));
@@ -514,17 +490,20 @@ public class ListFragment extends Fragment {
 
 
                                                 saveDance(dance_file);
-                                                deleteTemporaryFile(context, dance_file);
+                                                deleteTemporaryFile(dance_file);
                                                 mItemArray.clear();
-                                                if (listAdapter != null)
-                                                    listAdapter.notifyDataSetChanged();
-                                                loadDance();
+                                                if (listAdapter != null) listAdapter.notifyDataSetChanged();
+                                                loadDance(dance_file);
                                             } catch (IOException e) {
                                                 e.printStackTrace();
                                             }
-                                            ChoreographerConstants.init(context);
-                                            DanceCustomAdapter danceListAdapter = new DanceCustomAdapter(context, R.layout.dance_custom_list, ChoreographerConstants.DANCE_LIST_FILENAME);
-                                            ListView drawerList = (ListView) MainActivity.context.findViewById(R.id.left_drawer);
+                                            ChoreographerConstants.init(mExternalFilesDir);
+                                            DanceCustomAdapter danceListAdapter =
+                                                    new DanceCustomAdapter(getActivity(),
+                                                            R.layout.dance_custom_list,
+                                                            ChoreographerConstants.DANCE_LIST_FILENAME,
+                                                            mDrawer);
+                                            ListView drawerList = (ListView) getActivity().findViewById(R.id.left_drawer);
                                             drawerList.setAdapter(danceListAdapter);
                                             int index = ChoreographerConstants.getIndex(dance_file);
                                             if (index != -1) {
@@ -558,16 +537,20 @@ public class ListFragment extends Fragment {
                                     dance_file = input1.getText().toString();
                                     try {
                                         saveDance(dance_file);
-                                        deleteTemporaryFile(context, dance_file);
+                                        deleteTemporaryFile(dance_file);
                                         mItemArray.clear();
                                         if (listAdapter != null) listAdapter.notifyDataSetChanged();
-                                        loadDance();
+                                        loadDance(dance_file);
                                     } catch (IOException e) {
                                         e.printStackTrace();
                                     }
-                                    ChoreographerConstants.init(context);
-                                    DanceCustomAdapter danceListAdapter = new DanceCustomAdapter(context, R.layout.dance_custom_list, ChoreographerConstants.DANCE_LIST_FILENAME);
-                                    ListView drawerList = (ListView) MainActivity.context.findViewById(R.id.left_drawer);
+                                    ChoreographerConstants.init(mExternalFilesDir);
+                                    DanceCustomAdapter danceListAdapter =
+                                            new DanceCustomAdapter(context,
+                                                    R.layout.dance_custom_list,
+                                                    ChoreographerConstants.DANCE_LIST_FILENAME,
+                                                    mDrawer);
+                                    ListView drawerList = (ListView) getActivity().findViewById(R.id.left_drawer);
                                     drawerList.setAdapter(danceListAdapter);
                                     int index = ChoreographerConstants.getIndex(dance_file);
                                     if (index != -1) {
@@ -599,7 +582,7 @@ public class ListFragment extends Fragment {
                                                 dance_file = input1.getText().toString();
                                                 // Non case sensitive management
                                                 try {
-                                                    String filePath = getContext().getExternalFilesDir(null) + "/" + dance_file;
+                                                    String filePath = mExternalFilesDir + "/" + dance_file;
                                                     File file = new File(filePath);
                                                     boolean deleted = file.delete();
                                                     Log.d(TAG, "Deleted=" + (deleted ? "true" : "false"));
@@ -614,17 +597,21 @@ public class ListFragment extends Fragment {
 
 
                                                     saveDance(dance_file);
-                                                    deleteTemporaryFile(context, dance_file);
+                                                    deleteTemporaryFile(dance_file);
                                                     mItemArray.clear();
                                                     if (listAdapter != null)
                                                         listAdapter.notifyDataSetChanged();
-                                                    loadDance();
+                                                    loadDance(dance_file);
                                                 } catch (IOException e) {
                                                     e.printStackTrace();
                                                 }
-                                                ChoreographerConstants.init(context);
-                                                DanceCustomAdapter danceListAdapter = new DanceCustomAdapter(context, R.layout.dance_custom_list, ChoreographerConstants.DANCE_LIST_FILENAME);
-                                                ListView drawerList = (ListView) MainActivity.context.findViewById(R.id.left_drawer);
+                                                ChoreographerConstants.init(mExternalFilesDir);
+                                                DanceCustomAdapter danceListAdapter =
+                                                        new DanceCustomAdapter(context,
+                                                                R.layout.dance_custom_list,
+                                                                ChoreographerConstants.DANCE_LIST_FILENAME,
+                                                                mDrawer);
+                                                ListView drawerList = (ListView) getActivity().findViewById(R.id.left_drawer);
                                                 drawerList.setAdapter(danceListAdapter);
                                                 int index = ChoreographerConstants.getIndex(dance_file);
                                                 if (index != -1) {
@@ -671,10 +658,10 @@ public class ListFragment extends Fragment {
                     @Override
                     public void afterTextChanged(Editable s) {
                         if (input1.getText().toString().trim().length()<1){
-                            ((AlertDialog) dialog).getButton(AlertDialog.BUTTON_POSITIVE)
+                            dialog.getButton(AlertDialog.BUTTON_POSITIVE)
                                     .setVisibility(View.GONE);
                         }else{
-                            ((AlertDialog) dialog).getButton(AlertDialog.BUTTON_POSITIVE)
+                            dialog.getButton(AlertDialog.BUTTON_POSITIVE)
                                     .setVisibility(View.VISIBLE);
                         }
                     }
@@ -693,7 +680,7 @@ public class ListFragment extends Fragment {
             return true;
             case R.id.action_saveaspdf:
             {
-                    saveAsPDFDance(dance_file);
+                saveAsPDFDance(dance_file);
             }
             return true;
             case R.id.nav_Licence_Logiciel: {
@@ -729,7 +716,6 @@ public class ListFragment extends Fragment {
             }
             return true;
             case R.id.action_restore: {
-                //
                 final Context context = getContext();
                 final android.app.AlertDialog.Builder restoreDialog = new android.app.AlertDialog.Builder(context);
                 restoreDialog.setTitle(R.string.button_restore_confirm);
@@ -743,7 +729,7 @@ public class ListFragment extends Fragment {
                     @Override
                     public void onClick(DialogInterface arg0, int arg1) {
                         try {
-                            loadDance();
+                            loadDance(dance_file);
                             if (listAdapter!= null) {
                                 listAdapter.notifyDataSetChanged();
                                 listAdapter.setLastPosition(-1);
@@ -780,8 +766,11 @@ public class ListFragment extends Fragment {
                 isSyllabus=true;
                 getActivity().supportInvalidateOptionsMenu();
 
-                DanceCustomAdapter danceListAdapter = new DanceCustomAdapter(context, R.layout.dance_custom_list, ChoreographerConstants.DANCE_LIST_FILENAME);
-                ListView drawerList = (ListView) MainActivity.context.findViewById(R.id.left_drawer);
+                DanceCustomAdapter danceListAdapter =
+                        new DanceCustomAdapter(context, R.layout.dance_custom_list,
+                                ChoreographerConstants.DANCE_LIST_FILENAME,
+                                mDrawer);
+                ListView drawerList = (ListView) getActivity().findViewById(R.id.left_drawer);
                 drawerList.setAdapter(danceListAdapter);
                 danceListAdapter.setClicked(-1);
                 ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
@@ -802,208 +791,202 @@ public class ListFragment extends Fragment {
                 };
                 Collections.sort(Syllabus.figuresWithTempo,comparator);
                 for (String[] figure : Syllabus.figuresWithTempo){
-                    //for (String[] figure : Syllabus.figuresWithTempo;){
                     addFigure(figure);
                 }
                 return true;
             }
-            //
             case R.id.action_show_passport: {
                 final Context context = getContext();
-                {
-                    final AlertDialog.Builder  alert = new AlertDialog.Builder(context);
-                    alert.setIcon(R.mipmap.ic_launcher);
-                    alert.setTitle(R.string.action_show_passport_latin_or_standard);
-                    alert.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int whichButton) {
-                            // Canceled.
+
+                final AlertDialog.Builder  alert = new AlertDialog.Builder(context);
+                alert.setIcon(R.mipmap.ic_launcher);
+                alert.setTitle(R.string.action_show_passport_latin_or_standard);
+                alert.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+                        // Canceled.
+                    }
+                });
+
+                final ArrayAdapter<String> TypeArrayAdapter = new ArrayAdapter<String> (context, android.R.layout.simple_list_item_1 ) {
+                    @Override
+                    public View getView(int position, View convertView, ViewGroup parent) {
+                        View view = super.getView(position, convertView, parent);
+                        TextView text1 = (TextView) view.findViewById(android.R.id.text1);
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+                            text1.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
                         }
-                    });
-
-                    final ArrayAdapter<String> TypeArrayAdapter = new ArrayAdapter<String> (context, android.R.layout.simple_list_item_1 ) {
-                        @Override
-                        public View getView(int position, View convertView, ViewGroup parent) {
-                            View view = super.getView(position, convertView, parent);
-                            TextView text1 = (TextView) view.findViewById(android.R.id.text1);
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-                                text1.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
-                            }
-                            text1.setBackgroundResource(R.drawable.borderfilled);
-                            return view;
-                        }
-
-                    };
-
-                    for (String type :context.getResources().getStringArray(R.array.PassportType))
-                    {
-                        TypeArrayAdapter.add(type);
+                        text1.setBackgroundResource(R.drawable.borderfilled);
+                        return view;
                     }
 
-                    //alert.setItems(R.array.PassportType,
-                    alert.setAdapter(TypeArrayAdapter, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int discipline) {
-                            final AlertDialog.Builder alert = new AlertDialog.Builder(context);
-                            final int d= discipline;
-                            alert.setIcon(R.mipmap.ic_launcher);
-                            alert.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-                                public void onClick(DialogInterface dialog, int whichButton) {
-                                    // Canceled.
-                                }
-                            });
-                            alert.setTitle(R.string.action_show_passport_for);
-                            final int items ;if (d==0) {
-                                items = R.array.PassportDanceS;
-                            }else{
-                                items = R.array.PassportDanceL;
-                            }
-//
-                            final ArrayAdapter<String> DanceArrayAdapter = new ArrayAdapter<String> (context, android.R.layout.simple_list_item_1 ) {
-                                @Override
-                                public View getView(int position, View convertView, ViewGroup parent) {
-                                    View view = super.getView(position, convertView, parent);
-                                    TextView text1 = (TextView) view.findViewById(android.R.id.text1);
-                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-                                        text1.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
-                                    }
-                                    text1.setBackgroundResource(R.drawable.borderfilled);
-                                    return view;
-                                }
+                };
 
-                            };
-
-                            for (String item :context.getResources().getStringArray(items))
-                            {
-                                DanceArrayAdapter.add(item);
-                            }
-                            alert.setAdapter(DanceArrayAdapter, new DialogInterface.OnClickListener() {
-
-                                        @Override
-                                        public void onClick(DialogInterface dialog, int id) {
-                                            final AlertDialog.Builder alert = new AlertDialog.Builder(context);
-                                            final int danceID= id;
-                                            alert.setIcon(R.mipmap.ic_launcher);
-
-                                            alert.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-                                                public void onClick(DialogInterface dialog, int whichButton) {
-                                                    // Canceled.
-                                                }
-                                            });
-                                            int items = R.array.PassportColor;
-                                            int itemColors = R.array.PassportItemColors;
-                                            int itemBoxes =  R.array.PassportItemBoxes;
-
-                                            if (d==0){
-                                                alert.setTitle(R.string.action_show_passport_level);
-                                                if (danceID ==2) {
-                                                    items = R.array.PassportColorFromPurple;
-                                                    itemColors = R.array.PassportItemColorsFromPurple;
-                                                    itemBoxes =  R.array.PassportItemBoxesFromPurple;
-                                                }
-                                                if (danceID ==3){
-                                                    items = R.array.PassportColorFromGreen;
-                                                    itemColors = R.array.PassportItemColorsFromGreen;
-                                                    itemBoxes =  R.array.PassportItemBoxesFromGreen;
-                                                }
-                                                if (danceID ==4){
-                                                    items = R.array.PassportColorFromOrange;
-                                                    itemColors = R.array.PassportItemColorsFromOrange;
-                                                    itemBoxes =  R.array.PassportItemBoxesFromOrange;
-                                                }
-                                            }
-                                            if (d==1){
-                                                alert.setTitle(R.string.action_show_passport_level);
-                                                if (danceID ==0){
-                                                    items = R.array.PassportColorFromGreen;
-                                                    itemColors = R.array.PassportItemColorsFromGreen;
-                                                    itemBoxes =  R.array.PassportItemBoxesFromGreen;
-                                                }
-                                                if (danceID ==2){
-                                                    items = R.array.PassportColorFromOrange;                                                    itemColors = R.array.PassportItemColorsFromPurple;
-                                                    itemColors = R.array.PassportItemColorsFromOrange;
-                                                    itemBoxes =  R.array.PassportItemBoxesFromOrange;
-                                                }
-                                                if (danceID ==3){
-                                                    items = R.array.PassportColorFromPurple;
-                                                    itemColors = R.array.PassportItemColorsFromPurple;
-                                                    itemBoxes =  R.array.PassportItemBoxesFromPurple;
-                                                }
-                                            }
-                                            final int colors = itemColors;
-                                            final int boxes = itemBoxes;
-                                            final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String> (context, R.layout.passportcoloritem ) {
-                                                @Override
-                                                public View getView(int position, View convertView, ViewGroup parent) {
-                                                    View view = super.getView(position, convertView, parent);
-                                                    TextView text1 = (TextView) view.findViewById(android.R.id.text1);
-                                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-                                                        text1.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
-                                                    }
-                                                    text1.setBackgroundResource(R.drawable.borderfilled);
-                                                    String colorStr= context.getResources().getStringArray(colors)[position];
-
-                                                    text1.setTextColor(Color.parseColor(colorStr));
-                                                    {
-                                                        int resID = context.getResources().getIntArray(boxes)[position];
-
-                                                        switch (resID){
-                                                            case 1:
-                                                                text1.setCompoundDrawablesWithIntrinsicBounds(R.drawable.yellowbox,R.drawable.nobox,R.drawable.nobox,R.drawable.nobox);
-                                                                break;
-                                                            case 2:
-                                                                text1.setCompoundDrawablesWithIntrinsicBounds(R.drawable.orangebox,R.drawable.nobox,R.drawable.nobox,R.drawable.nobox);
-
-                                                                break;
-                                                            case 3:
-                                                                text1.setCompoundDrawablesWithIntrinsicBounds(R.drawable.greenbox,R.drawable.nobox,R.drawable.nobox,R.drawable.nobox);
-                                                                break;
-                                                            case 4:
-                                                                text1.setCompoundDrawablesWithIntrinsicBounds(R.drawable.purplebox,R.drawable.nobox,R.drawable.nobox,R.drawable.nobox);
-                                                                break;
-                                                            case 5:
-                                                                text1.setCompoundDrawablesWithIntrinsicBounds(R.drawable.bluebox,R.drawable.nobox,R.drawable.nobox,R.drawable.nobox);
-                                                                break;
-                                                            case 6:
-                                                                text1.setCompoundDrawablesWithIntrinsicBounds(R.drawable.redbox,R.drawable.nobox,R.drawable.nobox,R.drawable.nobox);
-                                                                break;
-                                                        }
-                                                    }
-                                                    return view;
-                                                }
-                                            };
-
-                                            for (String item :context.getResources().getStringArray(items))
-                                            {
-                                                arrayAdapter.add(item);
-                                            }
-                                            alert.setAdapter(arrayAdapter, new DialogInterface.OnClickListener() {
-                                                        @Override
-                                                        public void onClick(DialogInterface dialog, int which) {
-                                                            show_passport(context, d,danceID, which);
-                                                        }
-                                                    }
-                                            );
-
-                                            final AlertDialog dial = alert.create();
-                                            dial.show();
-
-                                        }
-                                    }
-
-                            );
-
-                            final AlertDialog dial = alert.create();
-                            dial.show();
-
-                        }
-                    });
-                    final AlertDialog dialog = alert.create();
-                    dialog.show();
+                for (String type :context.getResources().getStringArray(R.array.PassportType))
+                {
+                    TypeArrayAdapter.add(type);
                 }
+
+                alert.setAdapter(TypeArrayAdapter, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int discipline) {
+                        final AlertDialog.Builder alert = new AlertDialog.Builder(context);
+                        final int d= discipline;
+                        alert.setIcon(R.mipmap.ic_launcher);
+                        alert.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int whichButton) {
+                                // Canceled.
+                            }
+                        });
+                        alert.setTitle(R.string.action_show_passport_for);
+                        final int items ;if (d==0) {
+                            items = R.array.PassportDanceS;
+                        }else{
+                            items = R.array.PassportDanceL;
+                        }
+                        final ArrayAdapter<String> DanceArrayAdapter = new ArrayAdapter<String> (context, android.R.layout.simple_list_item_1 ) {
+                            @Override
+                            public View getView(int position, View convertView, ViewGroup parent) {
+                                View view = super.getView(position, convertView, parent);
+                                TextView text1 = (TextView) view.findViewById(android.R.id.text1);
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+                                    text1.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+                                }
+                                text1.setBackgroundResource(R.drawable.borderfilled);
+                                return view;
+                            }
+
+                        };
+
+                        for (String item :context.getResources().getStringArray(items))
+                        {
+                            DanceArrayAdapter.add(item);
+                        }
+                        alert.setAdapter(DanceArrayAdapter, new DialogInterface.OnClickListener() {
+
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int id) {
+                                        final AlertDialog.Builder alert = new AlertDialog.Builder(context);
+                                        final int danceID= id;
+                                        alert.setIcon(R.mipmap.ic_launcher);
+
+                                        alert.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                                            public void onClick(DialogInterface dialog, int whichButton) {
+                                                // Canceled.
+                                            }
+                                        });
+                                        int items = R.array.PassportColor;
+                                        int itemColors = R.array.PassportItemColors;
+                                        int itemBoxes =  R.array.PassportItemBoxes;
+
+                                        if (d==0){
+                                            alert.setTitle(R.string.action_show_passport_level);
+                                            if (danceID ==2) {
+                                                items = R.array.PassportColorFromPurple;
+                                                itemColors = R.array.PassportItemColorsFromPurple;
+                                                itemBoxes =  R.array.PassportItemBoxesFromPurple;
+                                            }
+                                            if (danceID ==3){
+                                                items = R.array.PassportColorFromGreen;
+                                                itemColors = R.array.PassportItemColorsFromGreen;
+                                                itemBoxes =  R.array.PassportItemBoxesFromGreen;
+                                            }
+                                            if (danceID ==4){
+                                                items = R.array.PassportColorFromOrange;
+                                                itemColors = R.array.PassportItemColorsFromOrange;
+                                                itemBoxes =  R.array.PassportItemBoxesFromOrange;
+                                            }
+                                        }
+                                        if (d==1){
+                                            alert.setTitle(R.string.action_show_passport_level);
+                                            if (danceID ==0){
+                                                items = R.array.PassportColorFromGreen;
+                                                itemColors = R.array.PassportItemColorsFromGreen;
+                                                itemBoxes =  R.array.PassportItemBoxesFromGreen;
+                                            }
+                                            if (danceID ==2){
+                                                items = R.array.PassportColorFromOrange;                                                    itemColors = R.array.PassportItemColorsFromPurple;
+                                                itemColors = R.array.PassportItemColorsFromOrange;
+                                                itemBoxes =  R.array.PassportItemBoxesFromOrange;
+                                            }
+                                            if (danceID ==3){
+                                                items = R.array.PassportColorFromPurple;
+                                                itemColors = R.array.PassportItemColorsFromPurple;
+                                                itemBoxes =  R.array.PassportItemBoxesFromPurple;
+                                            }
+                                        }
+                                        final int colors = itemColors;
+                                        final int boxes = itemBoxes;
+                                        final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String> (context, R.layout.passportcoloritem ) {
+                                            @Override
+                                            public View getView(int position, View convertView, ViewGroup parent) {
+                                                View view = super.getView(position, convertView, parent);
+                                                TextView text1 = (TextView) view.findViewById(android.R.id.text1);
+                                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+                                                    text1.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+                                                }
+                                                text1.setBackgroundResource(R.drawable.borderfilled);
+                                                String colorStr= context.getResources().getStringArray(colors)[position];
+
+                                                text1.setTextColor(Color.parseColor(colorStr));
+                                                {
+                                                    int resID = context.getResources().getIntArray(boxes)[position];
+
+                                                    switch (resID){
+                                                        case 1:
+                                                            text1.setCompoundDrawablesWithIntrinsicBounds(R.drawable.yellowbox,R.drawable.nobox,R.drawable.nobox,R.drawable.nobox);
+                                                            break;
+                                                        case 2:
+                                                            text1.setCompoundDrawablesWithIntrinsicBounds(R.drawable.orangebox,R.drawable.nobox,R.drawable.nobox,R.drawable.nobox);
+
+                                                            break;
+                                                        case 3:
+                                                            text1.setCompoundDrawablesWithIntrinsicBounds(R.drawable.greenbox,R.drawable.nobox,R.drawable.nobox,R.drawable.nobox);
+                                                            break;
+                                                        case 4:
+                                                            text1.setCompoundDrawablesWithIntrinsicBounds(R.drawable.purplebox,R.drawable.nobox,R.drawable.nobox,R.drawable.nobox);
+                                                            break;
+                                                        case 5:
+                                                            text1.setCompoundDrawablesWithIntrinsicBounds(R.drawable.bluebox,R.drawable.nobox,R.drawable.nobox,R.drawable.nobox);
+                                                            break;
+                                                        case 6:
+                                                            text1.setCompoundDrawablesWithIntrinsicBounds(R.drawable.redbox,R.drawable.nobox,R.drawable.nobox,R.drawable.nobox);
+                                                            break;
+                                                    }
+                                                }
+                                                return view;
+                                            }
+                                        };
+
+                                        for (String item :context.getResources().getStringArray(items))
+                                        {
+                                            arrayAdapter.add(item);
+                                        }
+                                        alert.setAdapter(arrayAdapter, new DialogInterface.OnClickListener() {
+                                                    @Override
+                                                    public void onClick(DialogInterface dialog, int which) {
+                                                        show_passport(context, d,danceID, which);
+                                                    }
+                                                }
+                                        );
+
+                                        final AlertDialog dial = alert.create();
+                                        dial.show();
+
+                                    }
+                                }
+
+                        );
+
+                        final AlertDialog dial = alert.create();
+                        dial.show();
+
+                    }
+                });
+                final AlertDialog dialog = alert.create();
+                dialog.show();
+
                 return true;
             }
-//
-            //
             case R.id.action_video: {
                 final Context context = getContext();
                 final AlertDialog.Builder  alert = new AlertDialog.Builder(context);
@@ -1081,7 +1064,6 @@ public class ListFragment extends Fragment {
 
                 return true;
             }
-//
             case R.id.allDances:
             case R.id.slowWaltz:
             case R.id.tango:
@@ -1107,8 +1089,11 @@ public class ListFragment extends Fragment {
                     isSyllabus=true;
                     getActivity().supportInvalidateOptionsMenu();
 
-                    DanceCustomAdapter danceListAdapter = new DanceCustomAdapter(context, R.layout.dance_custom_list, ChoreographerConstants.DANCE_LIST_FILENAME);
-                    ListView drawerList = (ListView) MainActivity.context.findViewById(R.id.left_drawer);
+                    DanceCustomAdapter danceListAdapter =
+                            new DanceCustomAdapter(context, R.layout.dance_custom_list,
+                                    ChoreographerConstants.DANCE_LIST_FILENAME,
+                                    mDrawer);
+                    ListView drawerList = (ListView) getActivity().findViewById(R.id.left_drawer);
                     drawerList.setAdapter(danceListAdapter);
                     danceListAdapter.setClicked(-1);
                     ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
@@ -1129,7 +1114,6 @@ public class ListFragment extends Fragment {
                     };
                     Collections.sort(Syllabus.figuresWithTempo,comparator);
                     for (String[] figure : Syllabus.figuresWithTempo){
-                        //for (String[] figure : Syllabus.figuresWithTempo;){
                         addFigure(figure);
                     }
                 }
@@ -1142,8 +1126,10 @@ public class ListFragment extends Fragment {
     private void show_passport(final Context context, int discipline, int dance_id, int color) {
         com.olklein.choreo.Passport.setDance(context,discipline,dance_id,color);
         dance_file = ChoreographerConstants.addNew(context, Passport.getName());
-        DanceCustomAdapter danceListAdapter = new DanceCustomAdapter(context, R.layout.dance_custom_list, ChoreographerConstants.DANCE_LIST_FILENAME);
-        ListView drawerList = (ListView) MainActivity.context.findViewById(R.id.left_drawer);
+        DanceCustomAdapter danceListAdapter =
+                new DanceCustomAdapter(context, R.layout.dance_custom_list,
+                        ChoreographerConstants.DANCE_LIST_FILENAME,mDrawer);
+        ListView drawerList = (ListView) getActivity().findViewById(R.id.left_drawer);
         drawerList.setAdapter(danceListAdapter);
 
         int index = ChoreographerConstants.getIndex(dance_file);
@@ -1241,8 +1227,8 @@ public class ListFragment extends Fragment {
         listAdapter.notifyDataSetChanged();
     }
 
-    private void deleteTemporaryFile(Context context, String name) {
-        String filePathFrom = context.getExternalFilesDir(null) + "/" + name+"onscreen";
+    private void deleteTemporaryFile(String name) {
+        String filePathFrom = mExternalFilesDir + "/" + name+"onscreen";
         File from = new File(filePathFrom);
         if (from.exists()) from.delete();
     }
@@ -1309,36 +1295,9 @@ public class ListFragment extends Fragment {
         }
     }
 
-//    private void saveFile(Uri sourceUri, String path){
-//        try {
-//            File destination = new File(path);
-//            File source = new File(sourceUri.getPath());
-//            FileChannel src = new FileInputStream(sourceUri.getPath()).getChannel();
-//
-//            FileChannel dst = new FileOutputStream(destination).getChannel();
-//            dst.transferFrom(src, 0, src.size());
-//            src.close();
-//            dst.close();
-//
-//        } catch (IOException ex) {
-//            ex.printStackTrace();
-//        }
-//    }
-
-//    private Uri saveVideo(Uri file) throws IOException {
-//        Log.d(TAG, "save video...");
-//
-//        String filePath = getContext().getExternalFilesDir(Environment.DIRECTORY_MOVIES)+"/"+ file.getLastPathSegment();
-//
-//        saveFile(file, filePath);
-//        Uri uri= Uri.fromFile(new File(filePath));
-//
-//        return uri;
-//    }
-
     private static void saveDance(String file) throws IOException {
         Log.d(TAG, "save...");
-        String filePath = mExternalFilesDir+file;
+        String filePath = mExternalFilesDir+"/"+file;
         saveDanceFromPath(filePath);
     }
     private static void saveDanceFromPath(String filePath) throws IOException {
@@ -1400,13 +1359,9 @@ public class ListFragment extends Fragment {
         sCreatedItems=mItemArray.size();
         if (listAdapter!= null) listAdapter.notifyDataSetChanged();
     }
-    private void loadDance() throws IOException {
-        String filePath = getActivity().getBaseContext().getExternalFilesDir(null)+"/"+dance_file;
-        loadDanceFile(filePath);
-    }
 
     private static void loadDance(String file) throws IOException {
-        String filePath=mExternalFilesDir+file;
+        String filePath=mExternalFilesDir+"/"+file;
         loadDanceFromPath(filePath);
     }
 
@@ -1442,15 +1397,25 @@ public class ListFragment extends Fragment {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                //
                 return true;
             default:
                 return super.onContextItemSelected(item);
         }
     }
 
-    public void onNewFileClick(final Context context)
-    {
+    private void updateFragmentList(){
+        if (mItemArray!=null) mItemArray.clear();
+        sCreatedItems = 0;
+        if (listAdapter != null) {
+            listAdapter.setLastPosition(-1);
+            listAdapter.notifyDataSetChanged();
+        }
+    }
+
+
+
+    public void onNewFileClick()
+    {final Context context =getActivity();
         LayoutInflater li = LayoutInflater.from(context);
         View promptsView = li.inflate(R.layout.saveas_dialog, null);
 
@@ -1475,12 +1440,15 @@ public class ListFragment extends Fragment {
 
         alert.setPositiveButton(R.string.OK, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int whichButton) {
-                ChoreographerConstants.init(context);
+                ChoreographerConstants.init(mExternalFilesDir);
                 dance_file = input1.getText().toString();
                 if (dance_file.replaceAll(" ","").equals(""))return;
                 dance_file = ChoreographerConstants.addNew(context, dance_file);
-                DanceCustomAdapter danceListAdapter = new DanceCustomAdapter(context, R.layout.dance_custom_list, ChoreographerConstants.DANCE_LIST_FILENAME);
-                ListView drawerList = (ListView) MainActivity.context.findViewById(R.id.left_drawer);
+                DanceCustomAdapter danceListAdapter =
+                        new DanceCustomAdapter(context, R.layout.dance_custom_list,
+                                ChoreographerConstants.DANCE_LIST_FILENAME,
+                                mDrawer);
+                ListView drawerList = (ListView) getActivity().findViewById(R.id.left_drawer);
                 drawerList.setAdapter(danceListAdapter);
 
                 int index = ChoreographerConstants.getIndex(dance_file);
@@ -1498,12 +1466,7 @@ public class ListFragment extends Fragment {
                     getActivity().supportInvalidateOptionsMenu();
 
                 }
-                if (mItemArray!=null) mItemArray.clear();
-                sCreatedItems = 0;
-                if (listAdapter != null) {
-                    listAdapter.setLastPosition(-1);
-                    listAdapter.notifyDataSetChanged();
-                }
+                updateFragmentList();
 
                 try {
                     saveDance(dance_file);
@@ -1526,10 +1489,10 @@ public class ListFragment extends Fragment {
             @Override
             public void afterTextChanged(Editable s) {
                 if (input1.getText().toString().trim().length()<1){
-                    ((AlertDialog) dialog).getButton(AlertDialog.BUTTON_POSITIVE)
+                    dialog.getButton(AlertDialog.BUTTON_POSITIVE)
                             .setVisibility(View.GONE);
                 }else{
-                    ((AlertDialog) dialog).getButton(AlertDialog.BUTTON_POSITIVE)
+                    dialog.getButton(AlertDialog.BUTTON_POSITIVE)
                             .setVisibility(View.VISIBLE);
                 }
             }
@@ -1568,7 +1531,6 @@ public class ListFragment extends Fragment {
         alert.show();
     }
 
-
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == IMPORT_REQUEST) {
@@ -1598,13 +1560,12 @@ public class ListFragment extends Fragment {
 
 
                     String filepath = uri.getPath();
-                    //getRealFilePath(uri);
                     if (!filepath.equals("")) {
                         File src = new File(filepath);
                         String fileName = src.getName();
                         if (displayName != null) fileName = displayName;
                         dance_file = ChoreographerConstants.addNew(getActivity().getBaseContext(), fileName);
-                        File dest = new File(getActivity().getBaseContext().getExternalFilesDir(null) + "/" + dance_file);
+                        File dest = new File(mExternalFilesDir + "/" + dance_file);
 
                         try {
                             copy(uri, dest);
@@ -1615,14 +1576,17 @@ public class ListFragment extends Fragment {
                         try {
                             mItemArray.clear();
                             if (listAdapter != null) listAdapter.notifyDataSetChanged();
-                            loadDance();
+                            loadDance(dance_file);
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
-                        ChoreographerConstants.init(MainActivity.context);
-                        DanceCustomAdapter danceListAdapter = new DanceCustomAdapter(MainActivity.context, R.layout.dance_custom_list, ChoreographerConstants.DANCE_LIST_FILENAME);
+                        ChoreographerConstants.init(mExternalFilesDir);
+                        DanceCustomAdapter danceListAdapter =
+                                new DanceCustomAdapter(getContext(),
+                                        R.layout.dance_custom_list,
+                                        ChoreographerConstants.DANCE_LIST_FILENAME,mDrawer);
 
-                        ListView drawerList = (ListView) MainActivity.context.findViewById(R.id.left_drawer);
+                        ListView drawerList = (ListView) getActivity().findViewById(R.id.left_drawer);
 
                         drawerList.setAdapter(danceListAdapter);
                         int index = ChoreographerConstants.getIndex(dance_file);
@@ -1700,53 +1664,53 @@ public class ListFragment extends Fragment {
         if (requestCode == VIDEO_CAPTURE_REQUEST && resultCode == RESULT_OK) {
             Uri uri = data.getData();
             if (uri!=null){
-            String uriString = uri.toString();
+                String uriString = uri.toString();
 
-            File myFile = new File(uriString);
-            String displayName = null;
+                File myFile = new File(uriString);
+                String displayName = null;
 
-            if (uriString.startsWith("content://")) {
-                Cursor cursor = null;
-                try {
-                    cursor = getActivity().getContentResolver().query(uri, null, null, null, null);
-                    if (cursor != null && cursor.moveToFirst()) {
-                        displayName = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
+                if (uriString.startsWith("content://")) {
+                    Cursor cursor = null;
+                    try {
+                        cursor = getActivity().getContentResolver().query(uri, null, null, null, null);
+                        if (cursor != null && cursor.moveToFirst()) {
+                            displayName = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
+                        }
+                    } finally {
+                        if (cursor != null) cursor.close();
                     }
-                } finally {
-                    if (cursor != null) cursor.close();
+                } else if (uriString.startsWith("file://")) {
+                    displayName = myFile.getName();
                 }
-            } else if (uriString.startsWith("file://")) {
-                displayName = myFile.getName();
-            }
 
-            String filepath = uri.getPath();
-            if (!filepath.equals("")) {
-                File src = new File(filepath);
-                String fileName = src.getName();
-                if (displayName != null) fileName = displayName;
-                File dest = new File(getActivity().getBaseContext().getExternalFilesDir(Environment.DIRECTORY_MOVIES) + "/" + fileName);
-                File destTMP = new File(getActivity().getBaseContext().getExternalFilesDir(Environment.DIRECTORY_MOVIES) + "/" + fileName+".tmp");
-                dest.setReadable(false);
+                String filepath = uri.getPath();
+                if (!filepath.equals("")) {
+                    File src = new File(filepath);
+                    String fileName = src.getName();
+                    if (displayName != null) fileName = displayName;
+                    File dest = new File(getActivity().getBaseContext().getExternalFilesDir(Environment.DIRECTORY_MOVIES) + "/" + fileName);
+                    File destTMP = new File(getActivity().getBaseContext().getExternalFilesDir(Environment.DIRECTORY_MOVIES) + "/" + fileName+".tmp");
+                    dest.setReadable(false);
 
-                Uri videoUri = Uri.parse(dest.getAbsolutePath());
-                String[] video = {"", "VideoURI-" + videoUri.toString()};
-                addVideo(video);
+                    Uri videoUri = Uri.parse(dest.getAbsolutePath());
+                    String[] video = {"", "VideoURI-" + videoUri.toString()};
+                    addVideo(video);
 
-                BkgCopier creator = new BkgCopier();
-                creator.createCopy(getActivity().getBaseContext(), uri,destTMP,dest);
-                SystemClock.sleep(TimeUnit.SECONDS.toMillis(1));
+                    BkgCopier creator = new BkgCopier();
+                    creator.createCopy(getActivity().getBaseContext(), uri,destTMP,dest);
+                    SystemClock.sleep(TimeUnit.SECONDS.toMillis(1));
 
-                try {
-                    saveDance(dance_file + "onscreen");
-                    mItemArray.clear();
-                    if (listAdapter != null) listAdapter.notifyDataSetChanged();
-                    loadDance(dance_file + "onscreen");
+                    try {
+                        saveDance(dance_file + "onscreen");
+                        mItemArray.clear();
+                        if (listAdapter != null) listAdapter.notifyDataSetChanged();
+                        loadDance(dance_file + "onscreen");
 
-                } catch (IOException e) {
-                    e.printStackTrace();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
-        }
         }
     }
 
@@ -1845,7 +1809,7 @@ public class ListFragment extends Fragment {
 
                 //sav
                 try {
-                    String filePath =view.getContext().getExternalFilesDir(null)+"/"+dance_file + "onscreen";
+                    String filePath =mExternalFilesDir+"/"+dance_file + "onscreen";
                     saveDanceFromPath(filePath);
                     mItemArray.clear();
                     if (listAdapter != null) listAdapter.notifyDataSetChanged();
@@ -1869,9 +1833,8 @@ public class ListFragment extends Fragment {
                 if (mItemArray.size()==pos) listAdapter.setLastPosition(pos-1);
                 listAdapter.notifyDataSetChanged();
                 //sav
-                //sav
                 try {
-                    String filePath =view.getContext().getExternalFilesDir(null)+"/"+dance_file + "onscreen";
+                    String filePath =mExternalFilesDir+"/"+dance_file + "onscreen";
                     saveDanceFromPath(filePath);
                     mItemArray.clear();
                     if (listAdapter != null) listAdapter.notifyDataSetChanged();
@@ -1899,12 +1862,12 @@ public class ListFragment extends Fragment {
         alert.setTitle(Video_Editor);
         final EditText input1 = (EditText) promptsView.findViewById(R.id.name);
         input1.setSingleLine();
-            String txtComment =mItemArray.get(pos).getComment();
-            if (txtComment.equals(mLoadingFileString)) {
-                input1.setText("");
-            }else {
-                input1.setText(mItemArray.get(pos).getComment());
-            }
+        String txtComment =mItemArray.get(pos).getComment();
+        if (txtComment.equals(mLoadingFileString)) {
+            input1.setText("");
+        }else {
+            input1.setText(mItemArray.get(pos).getComment());
+        }
 
         alert.setPositiveButton(R.string.OK, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int whichButton) {
@@ -1916,7 +1879,7 @@ public class ListFragment extends Fragment {
                 listAdapter.notifyDataSetChanged();
 
                 try {
-                    String filePath =context.getExternalFilesDir(null)+"/"+dance_file + "onscreen";
+                    String filePath =mExternalFilesDir+"/"+dance_file + "onscreen";
                     saveDanceFromPath(filePath);
                     mItemArray.clear();
                     if (listAdapter != null) listAdapter.notifyDataSetChanged();
@@ -1977,7 +1940,7 @@ public class ListFragment extends Fragment {
                 listAdapter.notifyDataSetChanged();
 
                 try {
-                    String filePath = view.getContext().getExternalFilesDir(null) + "/" + dance_file + "onscreen";
+                    String filePath = mExternalFilesDir + "/" + dance_file + "onscreen";
                     saveDanceFromPath(filePath);
                     mItemArray.clear();
                     if (listAdapter != null) listAdapter.notifyDataSetChanged();
@@ -1992,7 +1955,7 @@ public class ListFragment extends Fragment {
 
         dialog.show();
         if (ToDisabled) {
-            ((AlertDialog) dialog).getButton(AlertDialog.BUTTON_POSITIVE)
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE)
                     .setEnabled(false);
         }
     }

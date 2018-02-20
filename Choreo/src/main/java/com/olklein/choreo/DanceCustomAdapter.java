@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.support.annotation.NonNull;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.widget.DrawerLayout;
 import android.support.v7.widget.AppCompatImageView;
 import android.util.Log;
 import android.util.TypedValue;
@@ -54,11 +55,15 @@ class DanceCustomAdapter extends ArrayAdapter<String> {
     private final LayoutInflater inflator;
     private int checked;
     static final private String TAG ="DANCE";
+    private static String mHomePath;
 
-    public DanceCustomAdapter(Context context, int resource, String[] listOfDance) {
+    final private DrawerLayout mDrawer;
+
+    public DanceCustomAdapter(Context context, int resource, String[] listOfDance, DrawerLayout drawer) {
         super(context, resource, listOfDance);
         setList(listOfDance);
-
+        mHomePath = context.getExternalFilesDir(null).getPath();
+        mDrawer = drawer;
         inflator = LayoutInflater.from(context);
         checked=0;
     }
@@ -75,10 +80,10 @@ class DanceCustomAdapter extends ArrayAdapter<String> {
 
     @NonNull
     @Override
-    public View getView(final int position, View convertView, @NonNull ViewGroup parent) {
+    public View getView(final int position, View convertView, @NonNull final ViewGroup parent) {
         View myView = convertView;
-
         final Context context = getContext().getApplicationContext();
+
         ViewHolder holder;
         if(convertView == null){
             myView = inflator.inflate(R.layout.dance_custom_list, parent, false);
@@ -98,7 +103,7 @@ class DanceCustomAdapter extends ArrayAdapter<String> {
         holder.textViewName.setTextSize(TypedValue.COMPLEX_UNIT_SP,22);
         holder.textViewName.setMaxLines(1);
         holder.textViewName.setGravity(Gravity.CENTER_VERTICAL|Gravity.START);
-        LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) holder.textViewName.getLayoutParams();
+        final LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) holder.textViewName.getLayoutParams();
         params.setMargins(10,0,0,0);
         holder.textViewName.setLayoutParams(params);
 
@@ -107,7 +112,7 @@ class DanceCustomAdapter extends ArrayAdapter<String> {
             public void onClick(View v) {
                 Log.d(TAG, "Clicked"+position);
                 AlertDialog.Builder builder;
-                builder = new AlertDialog.Builder(MainActivity.context);
+                builder = new AlertDialog.Builder(getContext());
                 builder
                         .setPositiveButton(R.string.OK, new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int id) {
@@ -123,11 +128,18 @@ class DanceCustomAdapter extends ArrayAdapter<String> {
                                     deleted = file.delete();
                                     Log.d(TAG,"Deleted="+(deleted?"true":"false"));
                                 }
-                                ChoreographerConstants.init(context);
-                                DanceCustomAdapter danceListAdapter = new DanceCustomAdapter(context, R.layout.dance_custom_list, ChoreographerConstants.DANCE_LIST_FILENAME);
-                                ListView drawerList = (ListView) MainActivity.context.findViewById(R.id.left_drawer);
+                                ChoreographerConstants.init(mHomePath);
+                                DanceCustomAdapter danceListAdapter =
+                                        new DanceCustomAdapter(getContext(),
+                                                R.layout.dance_custom_list,
+                                                ChoreographerConstants.DANCE_LIST_FILENAME,mDrawer);
+                                ListView drawerList = (ListView) parent.findViewById(R.id.left_drawer);
+
                                 drawerList.setAdapter(danceListAdapter);
-                                MainActivity.doSelectItem(0);
+                                ListFragment fragment = new ListFragment();
+                                fragment.setDrawer(mDrawer);
+
+                                MainActivity.selectItem(fragment,0,mDrawer,drawerList);
                                 danceListAdapter.setClicked(0);
                             }
                         });
@@ -151,10 +163,12 @@ class DanceCustomAdapter extends ArrayAdapter<String> {
             public void onClick(View v) {
                 Log.d(TAG, "Clicked"+position);
                 if (position<ChoreographerConstants.DANCE_LIST_NAME.length) {
+                    ListView drawerList = (ListView) parent.findViewById(R.id.left_drawer);
                     MainActivity.setCurrentItem(position);
-                    MainActivity.doSelectItem(MainActivity.currentItem);
+                    ListFragment fragment = new ListFragment();
+                    fragment.setDrawer(mDrawer);
+                    MainActivity.selectItem(fragment,-1,mDrawer,drawerList);
                 }
-
             }
         });
 

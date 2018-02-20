@@ -201,7 +201,7 @@ public class DanceItemAdapter extends DragItemAdapter<DanceFigure, DanceItemAdap
         public void onItemClicked(View view) {
             lastPosition = getPositionForItemId(this.mItemId);
             if (mRhythm.getText().toString().startsWith("VideoURI-")){
-                Uri videoURI = Uri.parse((String) mRhythm.getText().toString().replaceFirst("VideoURI-",""));
+                Uri videoURI = Uri.parse(mRhythm.getText().toString().replaceFirst("VideoURI-",""));
                 ListFragment.openItemVideoDialog(view,lastPosition,videoURI);
             }else {
                 ListFragment.openItemDialog(view, lastPosition);
@@ -223,5 +223,4 @@ public class DanceItemAdapter extends DragItemAdapter<DanceFigure, DanceItemAdap
         File file = new File(path);
         return file.canRead();
     }
-
 }

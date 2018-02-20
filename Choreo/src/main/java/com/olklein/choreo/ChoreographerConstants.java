@@ -37,6 +37,7 @@ import java.util.Comparator;
  *    delete this exception statement from all source files in the program,
  *    then also delete it in the license file.
  */
+
 class ChoreographerConstants {
     public static String[] DANCE_LIST_NAME;
     public static String[] DANCE_LIST_FILENAME;
@@ -155,46 +156,47 @@ class ChoreographerConstants {
     }
 
 
-    public static void init(Context context){
-        File home = context.getExternalFilesDir(null);
+    public static void init(String homePath){
         ArrayList<String> fileList= new ArrayList<>();
+        File home = new File(homePath);
 
-        if (null != home){
-            MaxFilenameLength= 127-home.getAbsolutePath().length()-2-8;
-            Log.d(TAG,"MaxFilenameLength ="+ String.valueOf(MaxFilenameLength));
-            if (home.exists()){
+        if (null != home) {
+            MaxFilenameLength = 127 - home.getAbsolutePath().length() - 2 - 8;
+            Log.d(TAG, "MaxFilenameLength =" + String.valueOf(MaxFilenameLength));
+            if (home.exists()) {
                 Log.d("Files", home.getAbsolutePath());
             }
-            if (home.isDirectory()){
+            if (home.isDirectory()) {
                 File[] listOfFiles = home.listFiles();
 
                 for (File file : listOfFiles) {
                     String filename = file.getName();
-                    if (!filename.endsWith("onscreen") && !file.isDirectory()){
+                    if (!filename.endsWith("onscreen") && !file.isDirectory()) {
                         fileList.add(filename);
                     }
                 }
             }
-        }
-        if (fileList.size()>0) {
-            Collections.sort(fileList, new Comparator<String>() {
-                @Override
-                public int compare(String s1, String s2) {
-                    return s1.compareTo(s2);
+
+            if (fileList.size() > 0) {
+                Collections.sort(fileList, new Comparator<String>() {
+                    @Override
+                    public int compare(String s1, String s2) {
+                        return s1.compareTo(s2);
+                    }
+                });
+                DANCE_LIST_FILENAME = new String[fileList.size()];
+                DANCE_LIST_NAME = new String[fileList.size()];
+                int index = 0;
+                for (String name : fileList) {
+                    DANCE_LIST_FILENAME[index] = name;
+                    DANCE_LIST_NAME[index++] = name;
                 }
-            });
-            DANCE_LIST_FILENAME = new String[fileList.size()];
-            DANCE_LIST_NAME =new String[fileList.size()];
-            int index = 0;
-            for (String name : fileList) {
-                DANCE_LIST_FILENAME[index] = name;
-                DANCE_LIST_NAME[index++] = name;
+                MainActivity.setCurrentItem(0);
+            } else {
+                DANCE_LIST_FILENAME = new String[0];
+                DANCE_LIST_NAME = new String[0];
+                MainActivity.setCurrentItem(-1);
             }
-            MainActivity.setCurrentItem(0);
-        }else{
-            DANCE_LIST_FILENAME = new String[0];
-            DANCE_LIST_NAME = new String[0];
-            MainActivity.setCurrentItem(-1);
         }
     }
 }
