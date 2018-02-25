@@ -13,6 +13,7 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.support.v7.app.NotificationCompat;
 
+import com.itextpdf.text.Annotation;
 import com.itextpdf.text.BadElementException;
 import com.itextpdf.text.BaseColor;
 import com.itextpdf.text.Document;
@@ -27,8 +28,10 @@ import com.itextpdf.text.Phrase;
 import com.itextpdf.text.Rectangle;
 import com.itextpdf.text.pdf.BaseFont;
 import com.itextpdf.text.pdf.ColumnText;
+import com.itextpdf.text.pdf.PdfAnnotation;
 import com.itextpdf.text.pdf.PdfContentByte;
 import com.itextpdf.text.pdf.PdfPCell;
+import com.itextpdf.text.pdf.PdfPCellEvent;
 import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.pdf.PdfPageEventHelper;
 import com.itextpdf.text.pdf.PdfPageLabels;
@@ -123,7 +126,12 @@ class PDFCreator {
 
                 try {
                     logo = Image.getInstance(stream.toByteArray());
+                    Annotation annotation = new Annotation(0, 0, 0, 0,
+                            "https://play.google.com/store/apps/dev?id=7846443674268659262");
+                    logo.setAnnotation(annotation);
                     headerLine.addCell(logo);
+
+
                 } catch (BadElementException e) {
                     e.printStackTrace();
                 } catch (IOException e) {
@@ -142,6 +150,21 @@ class PDFCreator {
                         (document.right() - document.left()) / 2 + document.leftMargin(),
                         document.bottom() - document.bottomMargin() / 2, 0);
             }
+        }
+    }
+    static class LinkInCell implements PdfPCellEvent {
+        protected String comment;
+        public LinkInCell(String comment) {
+            this.comment = comment;
+        }
+        public void cellLayout(PdfPCell cell, Rectangle position,
+                               PdfContentByte[] canvases) {
+            PdfWriter writer = canvases[0].getPdfWriter();
+
+            PdfAnnotation annotation =PdfAnnotation.createText(writer,position, "Comment",
+                    comment, false, "Note");
+
+            writer.addAnnotation(annotation);
         }
     }
 
@@ -236,7 +259,9 @@ class PDFCreator {
 
             for (DanceFigure item : mItemArray) {
                 PdfPCell cell = new PdfPCell();
-                if (item.getTempo().startsWith("VideoURI-")) continue;
+                if (item.getTempo().startsWith("VideoURI-")) {
+                    continue;
+                }
                 if (item.getComment().equals("") && withComment) {
                     cell.setBorderColor(greyColor);
                     cell.setBorder(Rectangle.BOTTOM);
@@ -264,7 +289,11 @@ class PDFCreator {
                 cell.addElement(prg);
 
                 cell.setColspan(14);
+//                if (!item.getComment().equals("")&& !withComment){
+//                    cell.setCellEvent(new LinkInCell(item.getComment()));
+//                }
                 table.addCell(cell);
+
                 if (!item.getComment().equals("")&& withComment){
                     cell = new PdfPCell();
                     cell.setColspan(2);

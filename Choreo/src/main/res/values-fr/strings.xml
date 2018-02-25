@@ -81,11 +81,10 @@
     <string name="action_show_passport_latin_or_standard">Type de Danse ?</string>
     <string name="action_show_passport_for">Danse ?</string>
     <string name="action_show_passport_level">Niveau ?</string>
-    <string name="action_video">Vidéo</string>
-    <string name="action_video_delete_or_show">Voir ou supprimer la vidéo</string>
-    <string name="showVideo">Voir</string>
+    <string name="action_audiovideo">Audio/Vidéo/PDF</string>
     <string name="deleteVideo">Supprimer</string>
-    <string name="action_video_lost">Vidéo non trouvée!</string>
+    <string name="action_video_lost">Fichier non trouvé !</string>
+    <string name="action_unvalid_file">Fichier invalide !</string>
     <string name="action_import_export">Importer/Exporter</string>
     <string name="action_video_loadongoing">Copie en cours</string>
     <string name="clickToPlay">Cliquez ici pour voir la vidéo</string>
@@ -95,6 +94,19 @@
     <string name="Title">Titre :</string>
     <string name="EnterVideoTitle">Entrer un titre</string>
     <string name="Editer">Editer</string>
-    <string name="Video_Editor">Vidéo :</string>
-    <string name="action_video_unreadable">Fichier illisible!</string>
+    <string name="Add_title">Ajouter un titre :</string>
+    <string name="action_video_unreadable">Format non supporté!</string>
+    <string name="action_pdf">Pas d\'application trouvée pour ce type de fichier.</string>
+    <string name="action_no_apps">Pas d\'application trouvée pour exécuter cette commande.</string>
+    <string name="clickToOpen">Cliquez pour ouvrir</string>
+    <string name="action_open_file">Ouvrir avec ?</string>
+    <string name="playVideo">Jouer</string>
+    <string name="showImage">Voir</string>
+    <string name="playAudio">Ecouter</string>
+    <string name="openPDF">Ouvrir</string>
+    <string name="action_video_delete_or_play">Voir/Editer/Supprimer ?</string>
+    <string name="action_image_delete_or_show">Voir/Editer/Supprimer ?</string>
+    <string name="action_audio_delete_or_play">Ecouter/Editer/Supprimer ?</string>
+    <string name="action_pdf_delete_or_open">Ouvrir/Editer/Supprimer ?</string>
+    <string name="action_lostfile_delete">Fichier manquant :</string>
 </resources>

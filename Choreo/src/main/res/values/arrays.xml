@@ -99,13 +99,14 @@
         <item name="JV">Jive</item>
     </string-array>
     <string-array name="VideoCommands">
-        <item name="Capture">Capture</item>
-        <item name="Import">Import</item>
-        <item name="Clean">Cleaning</item>
+        <item name="Photo">Take a picture</item>
+        <item name="Capture">Take a movie</item>
+        <item name="Import">Import\n(audio/video/image/pdf)</item>
+        <item name="Clean">Clean</item>
     </string-array>
     <string-array name="ImportExportCommands">
-        <item name="Import">Import</item>
-        <item name="Export">Export</item>
+        <item name="Import">Import\na choreography</item>
+        <item name="Export">Export\nthis choreography</item>
     </string-array>
 
 </resources>

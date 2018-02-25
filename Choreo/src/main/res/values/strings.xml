@@ -98,11 +98,10 @@
     <string name="action_show_passport_latin_or_standard">Dance type?</string>
     <string name="action_show_passport_for">Dance?</string>
     <string name="action_show_passport_level">Level?</string>
-    <string name="action_video">Video</string>
-    <string name="action_video_delete_or_show">Show or delete this video?</string>
-    <string name="showVideo">Show</string>
+    <string name="action_audiovideo">Audio/Video/PDF</string>
     <string name="deleteVideo">Delete</string>
-    <string name="action_video_lost">Video not found!</string>
+    <string name="action_video_lost">File not found!</string>
+    <string name="action_unvalid_file">Unvalid file!</string>
     <string name="action_import_export">Import/Export</string>
     <string name="action_video_loadongoing">Copy on going</string>
     <string name="clickToPlay">Click here to play</string>
@@ -112,6 +111,20 @@
     <string name="Title">Title:</string>
     <string name="EnterVideoTitle">Enter a title</string>
     <string name="Editer">Edit</string>
-    <string name="Video_Editor">Video:</string>
-    <string name="action_video_unreadable">File cannot be read!</string>
+    <string name="Add_title">Set a title:</string>
+    <string name="action_video_unreadable">Unsupported file format!</string>
+    <string name="action_pdf">No application found to open this attachment.</string>
+    <string name="action_no_apps">No application found to execute this command.</string>
+    <string name="clickToOpen">Click to open</string>
+    <string name="action_open_file">Open with?</string>
+    <string name="playVideo">Play</string>
+    <string name="showImage">Show</string>
+    <string name="playAudio">Play</string>
+    <string name="openPDF">Open</string>
+    <string name="action_video_delete_or_play">Play/Edit/Delete?</string>
+    <string name="action_image_delete_or_show">Show/Edit/Delete?</string>
+    <string name="action_audio_delete_or_play">Play/Edit/Delete?</string>
+    <string name="action_pdf_delete_or_open">Open/Edit/Delete?</string>
+    <string name="action_lostfile_delete">Missing file:</string>
+
 </resources>

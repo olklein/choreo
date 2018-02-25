@@ -59,7 +59,7 @@ class MydragItem extends DragItem {
         ((TextView) dragView.findViewById(R.id.rhythmTv)).setText(text);
         if (text.toString().startsWith("VideoURI-")){
             ((TextView) dragView.findViewById(R.id.rhythmTv)).setVisibility(View.GONE);
-            ((ImageView) dragView.findViewById(R.id.image)).setImageResource(R.drawable.ic_theater_48);
+            ((ImageView) dragView.findViewById(R.id.image)).setImageResource(R.drawable.ic_drag_handle_black_48px);
             ((ImageView) dragView.findViewById(R.id.image)).setBackgroundColor(itemBorderColor);
             ((TextView) dragView.findViewById(R.id.nameTv)).setBackgroundColor(itemBorderColor);
             ((LinearLayout) dragView.findViewById(R.id.item)).setBackgroundColor(itemBorderColor);

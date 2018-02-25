@@ -30,16 +30,23 @@ package com.olklein.choreo;
  */
 
 import android.app.NotificationManager;
+import android.content.ActivityNotFoundException;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.pdf.PdfRenderer;
+import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.ParcelFileDescriptor;
 import android.os.SystemClock;
 import android.provider.MediaStore;
 import android.provider.OpenableColumns;
@@ -65,11 +72,13 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.MimeTypeMap;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.woxthebox.draglistview.DragListView;
 import com.woxthebox.draglistview.swipe.ListSwipeHelper;
@@ -86,16 +95,22 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
+import java.util.Locale;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 
 import static android.app.Activity.RESULT_OK;
+import static android.graphics.Bitmap.createBitmap;
 import static android.support.v4.content.FileProvider.getUriForFile;
+import static com.olklein.choreo.R.string.Add_title;
 import static com.olklein.choreo.R.string.Figure_Editor;
-import static com.olklein.choreo.R.string.Video_Editor;
+
+
 import static com.olklein.choreo.Syllabus.setDance;
 
 public class ListFragment extends Fragment {
@@ -107,7 +122,7 @@ public class ListFragment extends Fragment {
 
     private static final int IMPORT_REQUEST   = 202;
     private static final int VIDEO_IMPORT_REQUEST   = 203;
-    private static final int VIDEO_CAPTURE_REQUEST   = 204;
+    private static final int MEDIA_CAPTURE_REQUEST   = 204;
 
 
     private static DanceItemAdapter listAdapter;
@@ -118,16 +133,20 @@ public class ListFragment extends Fragment {
     private static String mExternalFilesDir;
     private static String mLoadingFileString;
     private DrawerLayout mDrawer;
-
+    private static ContentResolver mContentResolver;
+    private static Resources mResources;
     public void setDrawer(DrawerLayout drawer)
     {
         mDrawer = drawer;
     }
+    private static Bitmap icBmpFile;
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         File home = getActivity().getExternalFilesDir(null);
 
+        mContentResolver = getActivity().getContentResolver();
+        mResources =getActivity().getResources();
         if (home!=null) {
             mExternalFilesDir = home.getPath();
         }
@@ -138,6 +157,7 @@ public class ListFragment extends Fragment {
         sCreatedItems = 0;
         setHasOptionsMenu(true);
         AppCompatDelegate.setCompatVectorFromResourcesEnabled(true);
+
         Log.d(TAG,"In create");
     }
 
@@ -146,6 +166,7 @@ public class ListFragment extends Fragment {
         final View view = inflater.inflate(R.layout.list_layout, container, false);
 
         Bundle bundle = getArguments();
+        icBmpFile = BitmapFactory.decodeResource(getResources(),R.drawable.ic_insert_drive_file_black_48px);
 
         dance_file = bundle.getString(ChoreographerConstants.FILE);
 
@@ -991,7 +1012,7 @@ public class ListFragment extends Fragment {
                 final Context context = getContext();
                 final AlertDialog.Builder  alert = new AlertDialog.Builder(context);
                 alert.setIcon(R.mipmap.ic_launcher);
-                alert.setTitle(R.string.action_video);
+                alert.setTitle(R.string.action_audiovideo);
                 alert.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int whichButton) {
                         // Canceled.
@@ -1020,19 +1041,57 @@ public class ListFragment extends Fragment {
                     @Override
                     public void onClick(DialogInterface dialog, int command) {
                         {
-                            if (command == 0) {
-                                Intent takeVideoIntent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
-                                if (takeVideoIntent.resolveActivity(context.getPackageManager()) != null) {
-                                    startActivityForResult(takeVideoIntent, VIDEO_CAPTURE_REQUEST);
-                                }
+                            if (command == 0 || command == 1) {
 
-                            }
-                            if (command == 1) {
-                                Intent si = new Intent(Intent.ACTION_GET_CONTENT);
-                                si.setType("video/mp4");
-                                startActivityForResult(si, VIDEO_IMPORT_REQUEST);
+                                Intent captureIntent;
+                                String extension ;
+                                if (command == 0) {
+                                    captureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                                    extension="jpeg";
+                                }else {
+                                    captureIntent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
+                                    extension="mpeg";
+                                }
+                                if (captureIntent .resolveActivity(context.getPackageManager()) != null) {
+                                    File mediaFile = null;
+                                    try {
+                                        mediaFile = createMediaFile(extension);
+                                    } catch (IOException ex) {
+                                        // Error occurred while creating the File
+                                        ex.printStackTrace();
+                                    }
+                                    Uri contentURI;
+                                    // Continue only if the File was successfully created
+                                    if (mediaFile != null) {
+                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                                            contentURI = getUriForFile(context,
+                                                    "com.olklein.choreo.fileProvider",
+                                                    mediaFile);
+                                        } else {
+                                            contentURI =Uri.fromFile(mediaFile);
+                                        }
+
+                                        captureIntent.putExtra(MediaStore.EXTRA_OUTPUT, contentURI);
+                                        startActivityForResult(captureIntent, MEDIA_CAPTURE_REQUEST);
+                                    }
+                                }
                             }
                             if (command == 2) {
+                                try{
+                                    Intent si = new Intent(Intent.ACTION_GET_CONTENT);
+                                    String [] types ={"audio/*","video/*","application/pdf"};
+                                    si.setType("video/*");
+                                    si.setType("audio/*");
+                                    si.setType("application/pdf");
+                                    si.putExtra(Intent.EXTRA_MIME_TYPES,types);
+
+
+                                    startActivityForResult(si, VIDEO_IMPORT_REQUEST);
+                                } catch (ActivityNotFoundException anfe) {
+                                    Toast.makeText(context, mResources.getString(R.string.action_no_apps), Toast.LENGTH_LONG).show();
+                                }
+                            }
+                            if (command == 3) {
                                 final AlertDialog.Builder alert = new AlertDialog.Builder(context);
                                 alert.setIcon(R.mipmap.ic_launcher);
                                 alert.setTitle(R.string.cleaning);
@@ -1535,7 +1594,6 @@ public class ListFragment extends Fragment {
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == IMPORT_REQUEST) {
             if (resultCode == RESULT_OK) {
-
                 Uri uri = data.getData();
                 if (uri != null) {
                     //New getname
@@ -1613,6 +1671,7 @@ public class ListFragment extends Fragment {
                     String uriString = uri.toString();
                     File myFile = new File(uriString);
                     String displayName = null;
+                    String extension="";
 
                     if (uriString.startsWith("content://")) {
                         Cursor cursor = null;
@@ -1620,13 +1679,16 @@ public class ListFragment extends Fragment {
                             cursor = getActivity().getContentResolver().query(uri, null, null, null, null);
                             if (cursor != null && cursor.moveToFirst()) {
                                 displayName = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
+                                final MimeTypeMap mime = MimeTypeMap.getSingleton();
+                                extension = "."+mime.getExtensionFromMimeType(getActivity().getContentResolver().getType(uri));
                             }
                         } finally {
                             if (cursor != null) cursor.close();
                         }
                     } else if (uriString.startsWith("file://")) {
                         displayName = myFile.getName();
-                    }
+                        extension="";
+                        ;                    }
 
                     String filepath = uri.getPath();
                     if (!filepath.equals("")) {
@@ -1634,8 +1696,9 @@ public class ListFragment extends Fragment {
                         String fileName = src.getName();
                         if (displayName != null) fileName = displayName;
                         Context ctxt = getActivity().getBaseContext();
-                        File dest = new File(ctxt.getExternalFilesDir(Environment.DIRECTORY_MOVIES) + "/" + fileName);
-                        File destTMP = new File(ctxt.getExternalFilesDir(Environment.DIRECTORY_MOVIES) + "/" + fileName + ".tmp");
+                        if (fileName.endsWith(extension)) extension="";
+                        File dest = new File(ctxt.getExternalFilesDir(Environment.DIRECTORY_MOVIES) + "/" + fileName+extension);
+                        File destTMP = new File(ctxt.getExternalFilesDir(Environment.DIRECTORY_MOVIES) + "/" + fileName+extension + ".tmp");
                         dest.setReadable(false);
 
                         Uri videoUri = Uri.parse(dest.getAbsolutePath());
@@ -1660,58 +1723,73 @@ public class ListFragment extends Fragment {
             }
         }
 
+        if (requestCode == MEDIA_CAPTURE_REQUEST && resultCode == RESULT_OK) {
+            Uri videoUri = Uri.parse(mCurrentMediaFilePath);
+            String[] video = {"", "VideoURI-" + videoUri.toString()};
+            addVideo(video);
 
-        if (requestCode == VIDEO_CAPTURE_REQUEST && resultCode == RESULT_OK) {
-            Uri uri = data.getData();
-            if (uri!=null){
-                String uriString = uri.toString();
+            try {
+                saveDance(dance_file + "onscreen");
+                mItemArray.clear();
+                if (listAdapter != null) listAdapter.notifyDataSetChanged();
+                loadDance(dance_file + "onscreen");
 
-                File myFile = new File(uriString);
-                String displayName = null;
-
-                if (uriString.startsWith("content://")) {
-                    Cursor cursor = null;
-                    try {
-                        cursor = getActivity().getContentResolver().query(uri, null, null, null, null);
-                        if (cursor != null && cursor.moveToFirst()) {
-                            displayName = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
-                        }
-                    } finally {
-                        if (cursor != null) cursor.close();
-                    }
-                } else if (uriString.startsWith("file://")) {
-                    displayName = myFile.getName();
-                }
-
-                String filepath = uri.getPath();
-                if (!filepath.equals("")) {
-                    File src = new File(filepath);
-                    String fileName = src.getName();
-                    if (displayName != null) fileName = displayName;
-                    File dest = new File(getActivity().getBaseContext().getExternalFilesDir(Environment.DIRECTORY_MOVIES) + "/" + fileName);
-                    File destTMP = new File(getActivity().getBaseContext().getExternalFilesDir(Environment.DIRECTORY_MOVIES) + "/" + fileName+".tmp");
-                    dest.setReadable(false);
-
-                    Uri videoUri = Uri.parse(dest.getAbsolutePath());
-                    String[] video = {"", "VideoURI-" + videoUri.toString()};
-                    addVideo(video);
-
-                    BkgCopier creator = new BkgCopier();
-                    creator.createCopy(getActivity().getBaseContext(), uri,destTMP,dest);
-                    SystemClock.sleep(TimeUnit.SECONDS.toMillis(1));
-
-                    try {
-                        saveDance(dance_file + "onscreen");
-                        mItemArray.clear();
-                        if (listAdapter != null) listAdapter.notifyDataSetChanged();
-                        loadDance(dance_file + "onscreen");
-
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
+
+//        if (requestCode == VIDEO_CAPTURE_REQUEST && resultCode == RESULT_OK) {
+//            Uri uri = data.getData();
+//            if (uri!=null){
+//                String uriString = uri.toString();
+//
+//                File myFile = new File(uriString);
+//                String displayName = null;
+//
+//                if (uriString.startsWith("content://")) {
+//                    Cursor cursor = null;
+//                    try {
+//                        cursor = getActivity().getContentResolver().query(uri, null, null, null, null);
+//                        if (cursor != null && cursor.moveToFirst()) {
+//                            displayName = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
+//                        }
+//                    } finally {
+//                        if (cursor != null) cursor.close();
+//                    }
+//                } else if (uriString.startsWith("file://")) {
+//                    displayName = myFile.getName();
+//                }
+//
+//                String filepath = uri.getPath();
+//                if (!filepath.equals("")) {
+//                    File src = new File(filepath);
+//                    String fileName = src.getName();
+//                    if (displayName != null) fileName = displayName;
+//                    File dest = new File(getActivity().getBaseContext().getExternalFilesDir(Environment.DIRECTORY_MOVIES) + "/" + fileName);
+//                    File destTMP = new File(getActivity().getBaseContext().getExternalFilesDir(Environment.DIRECTORY_MOVIES) + "/" + fileName+".tmp");
+//                    dest.setReadable(false);
+//
+//                    Uri videoUri = Uri.parse(dest.getAbsolutePath());
+//                    String[] video = {"", "VideoURI-" + videoUri.toString()};
+//                    addVideo(video);
+//
+//                    BkgCopier creator = new BkgCopier();
+//                    creator.createCopy(getActivity().getBaseContext(), uri,destTMP,dest);
+//                    SystemClock.sleep(TimeUnit.SECONDS.toMillis(1));
+//
+//                    try {
+//                        saveDance(dance_file + "onscreen");
+//                        mItemArray.clear();
+//                        if (listAdapter != null) listAdapter.notifyDataSetChanged();
+//                        loadDance(dance_file + "onscreen");
+//
+//                    } catch (IOException e) {
+//                        e.printStackTrace();
+//                    }
+//                }
+//            }
+//        }
     }
 
 
@@ -1852,6 +1930,15 @@ public class ListFragment extends Fragment {
 
     }
 
+    public static boolean isMimeTypeValid(Uri contentUri){
+        String mimeType = getMimeType(contentUri);
+        if (mimeType == null) return false;
+        if (!mimeType.startsWith("video") && !mimeType.startsWith("audio")
+                && !mimeType.startsWith("image") && !mimeType.startsWith("application/pdf")) return false;
+        return (new File(contentUri.getPath())).exists() && (new File(contentUri.getPath())).canRead() ;
+    }
+
+
     private static void openEditVideoItemDialog(final Context context, final int pos) {
         LayoutInflater li = LayoutInflater.from(context);
         View promptsView = li.inflate(R.layout.edit_video_dialog, null);
@@ -1859,7 +1946,8 @@ public class ListFragment extends Fragment {
         AlertDialog.Builder alert = new AlertDialog.Builder(context);
         alert.setView(promptsView);
         alert.setIcon(R.mipmap.ic_launcher);
-        alert.setTitle(Video_Editor);
+        alert.setTitle(Add_title);
+
         final EditText input1 = (EditText) promptsView.findViewById(R.id.name);
         input1.setSingleLine();
         String txtComment =mItemArray.get(pos).getComment();
@@ -1900,36 +1988,103 @@ public class ListFragment extends Fragment {
     }
 
 
+
     public static void openItemVideoDialog(final View view, final int pos, final Uri videoURI) {
         final Context context = view.getContext();
-        boolean ToDisabled = false;
         final AlertDialog.Builder alert = new AlertDialog.Builder(context);
-
         alert.setIcon(R.mipmap.ic_launcher);
-        alert.setTitle(R.string.action_video_delete_or_show);
-        alert.setNegativeButton(R.string.Editer, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int whichButton) {
-                // Edit
-                openEditVideoItemDialog(context,pos);
-            }
-        });
+        alert.setTitle(R.string.action_video_delete_or_play);
 
-        if (isUriValid(videoURI)) {
-            alert.setPositiveButton(R.string.showVideo, new DialogInterface.OnClickListener() {
+        if (isMimeTypeValid(videoURI)) {
+            final String mimeType = getMimeType(videoURI);
+            alert.setNegativeButton(R.string.Editer, new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {
-                    Intent intent = new Intent(Intent.ACTION_VIEW, videoURI);
-                    intent.setDataAndType(videoURI, "video/mp4");
-                    intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-                    context.startActivity(intent);
+                    // Edit
+                    openEditVideoItemDialog(context,pos);
+                }
+            });
+
+            int buttonID=R.string.playVideo;
+            if (mimeType.startsWith("audio")){
+                buttonID= R.string.playAudio;
+                alert.setTitle(R.string.action_audio_delete_or_play);
+            }
+            if (mimeType.startsWith("image")) {
+                buttonID= R.string.showImage;
+                alert.setTitle(R.string.action_image_delete_or_show);
+            }
+            if (mimeType.startsWith("application/pdf")) {
+                buttonID= R.string.openPDF;
+                alert.setTitle(R.string.action_pdf_delete_or_open);
+            }
+
+
+            alert.setPositiveButton(buttonID, new DialogInterface.OnClickListener() {
+                //                String mimeType = getMimeType(videoURI);
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    String type="video/*";
+                    if ( mimeType.startsWith("video")) type="video/*";
+                    if ( mimeType.startsWith("audio")) type="audio/*";
+                    if ( mimeType.startsWith("image")) type="image/*";
+                    if ( mimeType.startsWith("application")) type="application/pdf";
+
+
+                    //                    if (mimeType.contains("text")) {
+//                        Intent takeVideoIntent = new Intent(MediaStore.INTENT_ACTION_TEXT_OPEN_FROM_SEARCH);
+//                        if (takeVideoIntent.resolveActivity(context.getPackageManager()) != null) {
+//                            Intent intent = new Intent(Intent.ACTION_VIEW, videoURI);
+//                            intent.setDataAndType(videoURI, mimeType);
+//                            intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+//                            context.startActivity(intent);
+//                        }
+//                    }else {
+//                    if (mimeType.startsWith("application/pdf")) {
+//                        try {
+//                            Intent intent = new Intent();
+//                            intent.setAction(Intent.ACTION_VIEW);
+//                            MimeTypeMap mime = MimeTypeMap.getSingleton();
+//                            String ext = "pdf";
+//                            String type = mime.getMimeTypeFromExtension(ext);
+//                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+//                                Uri contentUri = getUriForFile(context, "com.olklein.choreo.fileProvider", new File(videoURI.getPath()));
+//                                intent.setDataAndType(contentUri, "application/pdf");
+//                                intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+//                                context.startActivity(Intent.createChooser(intent, mResources.getString(R.string.action_open_file)));
+//
+//                            } else {
+//                                intent.setDataAndType(Uri.fromFile(new File(videoURI.getPath())), type);
+//                                context.startActivity(Intent.createChooser(intent, mResources.getString(R.string.action_open_file)));
+//                            }
+//                        } catch (ActivityNotFoundException anfe) {
+//                            Toast.makeText(context, mResources.getString(R.string.action_pdf), Toast.LENGTH_LONG).show();
+//                        }
+//                    }else{
+                    try {
+                        Intent intent = new Intent();
+                        intent.setAction(Intent.ACTION_VIEW);
+//                            Intent intent = new Intent(Intent.ACTION_VIEW, videoURI);
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                            Uri contentUri = getUriForFile(context, "com.olklein.choreo.fileProvider", new File(videoURI.getPath()));
+                            intent.setDataAndType(contentUri,type);
+                            intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                            context.startActivity(Intent.createChooser(intent, mResources.getString(R.string.action_open_file)));
+                        } else {
+                            intent.setDataAndType(Uri.fromFile(new File(videoURI.getPath())), type);
+                            //intent.setDataAndType(videoURI, type);
+                            context.startActivity(Intent.createChooser(intent, mResources.getString(R.string.action_open_file)));
+                        }
+                    } catch (ActivityNotFoundException anfe) {
+                        Toast.makeText(context, mResources.getString(R.string.action_no_apps), Toast.LENGTH_LONG).show();
+                    }
+//                    }
                 }
             });
         } else {
-            alert.setPositiveButton(R.string.showVideo, new DialogInterface.OnClickListener() {
+            alert.setTitle(R.string.action_lostfile_delete);
+            alert.setPositiveButton(R.string.cancel, new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {
-                    alert.setTitle(R.string.action_video_lost);
                 }
             });
-            ToDisabled = true;
         }
 
         alert.setNeutralButton(R.string.deleteVideo, new DialogInterface.OnClickListener() {
@@ -1952,11 +2107,221 @@ public class ListFragment extends Fragment {
         });
 
         final AlertDialog dialog = alert.create();
-
         dialog.show();
-        if (ToDisabled) {
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE)
-                    .setEnabled(false);
+    }
+
+
+//    public static Boolean isVideo(Uri fileUri){
+//
+//        MediaMetadataRetriever mdr = new MediaMetadataRetriever();
+//        String path = fileUri.getPath();
+//        try {
+//            mdr.setDataSource(path);
+//            String hasVideo = mdr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_HAS_VIDEO);
+//            String mimeType = mdr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_MIMETYPE);
+//            if (mimeType!=null){
+//                Log.d("Choreo","MIME Tpye is "+mimeType);
+//            }
+//            if (hasVideo!=null){
+//                mdr.release();
+//                return true;
+//            } else{
+//                mdr.release();
+//                return false;
+//            }
+//        }catch(Exception e ){
+//            mdr.release();
+//            return false;
+//        }
+//    }
+//
+//    public static Boolean isAudio(Uri fileUri) {
+//        MediaMetadataRetriever mdr = new MediaMetadataRetriever();
+//        String path = fileUri.getPath();
+//        try {
+//            mdr.setDataSource(path);
+//            String mimeType = mdr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_MIMETYPE);
+//            if (mimeType != null) {
+//                if (mimeType.startsWith("audio")) {
+//                    Log.d("Choreo", "MIME Tpye is " + mimeType);
+//                    mdr.release();
+//                    return true;
+//                }
+//            }
+//        }catch(Exception e ){
+//                mdr.release();
+//                return false;
+//        }
+//        mdr.release();
+//        return false;
+//    }
+
+    public static String getMimeType(Uri uri) {
+        String mimeType = null;
+        String scheme = uri.getScheme();
+        if (scheme!=null && scheme.equals(ContentResolver.SCHEME_CONTENT)) {
+            mimeType = mContentResolver.getType(uri);
+        } else {
+            String name=uri.toString().replaceAll(" ","");
+            name =name.replaceAll("\\[","");
+            name=name.replaceAll("\\]","");
+            name=name.replaceAll("\\'","");
+            name=name.replaceAll("\\&","");
+            name=name.replaceAll("&quot;","");
+            name=name.replaceAll("\\?","");
+
+
+
+
+            String fileExtension = MimeTypeMap.getFileExtensionFromUrl(name);
+            mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileExtension.toLowerCase());
+        }
+        return mimeType;
+    }
+
+
+    //    public static Boolean isImage(Uri fileUri) {
+//        try {
+//            String mimeType = getMimeType(fileUri);
+//            if (mimeType != null) {
+//                if (mimeType.startsWith("image")) {
+//                    Log.d("Choreo", "MIME Tpye is " + mimeType);
+//                    return true;
+//                }
+//            }
+//        }catch(Exception e ){
+//            return false;
+//        }
+//        return false;
+//    }
+    public static String getTitle(Uri fileUri){
+
+        MediaMetadataRetriever mdr = new MediaMetadataRetriever();
+        String path = fileUri.getPath();
+        try {
+            mdr.setDataSource(path);
+            String title = mdr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
+            if (title!=null){
+                mdr.release();
+                return title;
+            } else{
+                mdr.release();
+                return "";
+            }
+        }catch(Exception e ){
+            mdr.release();
+            return "";
         }
     }
+
+
+    public static Bitmap getThumbnail(Uri fileUri){
+        String mimeType = getMimeType(fileUri);
+
+        if (mimeType!=null && mimeType.startsWith("image")){
+            return BitmapFactory.decodeFile(fileUri.getPath());
+        }
+        if (mimeType!=null && (mimeType.startsWith("application/pdf") || mimeType.startsWith("text"))){
+            return CreatePageImageExtract(fileUri);
+        }
+
+        MediaMetadataRetriever mdr = new MediaMetadataRetriever();
+        String path = fileUri.getPath();
+        try {
+
+            mdr.setDataSource(path);
+
+            String length = mdr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
+            String hasVideo = mdr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_HAS_VIDEO);
+            if (hasVideo!=null){
+                int duration=0;
+                try {
+                    duration = Integer.parseInt(length)/2;
+                }catch(Exception e){
+                    duration = 1;
+                }
+                return mdr.getFrameAtTime(duration*1000);
+            } else{
+                byte[] albumArt = mdr.getEmbeddedPicture();
+
+                if (albumArt != null) {
+                    return BitmapFactory.decodeByteArray(albumArt, 0, albumArt.length);
+                }
+                return null;
+            }
+        }catch(Exception e ){
+            mdr.release();
+            return null;
+        }
+    }
+
+//    public static boolean isPdf(Uri uri) {
+//        String mimeType = getMimeType(uri);
+//        if (mimeType!=null && mimeType.startsWith("application/pdf")){
+//            return true;
+//        }
+//        return false;
+//    }
+
+
+
+    //{
+
+    private static Bitmap CreatePageImageExtract( Uri uri) {
+        File fileIn = new File(uri.getPath());
+        PdfRenderer.Page mCurrentPage;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+
+            ParcelFileDescriptor mFileDescriptor = null;
+            PdfRenderer mPdfRenderer = null;
+            try {
+                mFileDescriptor = ParcelFileDescriptor.open(fileIn, ParcelFileDescriptor.MODE_READ_ONLY);
+                try {
+                    mPdfRenderer = new PdfRenderer(mFileDescriptor);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+
+            if (mPdfRenderer == null) {
+                return null;
+            }
+            mCurrentPage = mPdfRenderer.openPage(0);
+
+            float h;
+            h = (float) (1024*(float)mCurrentPage.getHeight()/(float)mCurrentPage.getWidth());
+            Bitmap bitmap = createBitmap((int) 1024, (int) h, Bitmap.Config.ARGB_8888);
+            bitmap.eraseColor(0xffFFFFFF);
+            mCurrentPage.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY);
+
+            return bitmap;
+
+        }
+        return null;
+    }
+
+    //
+    String mCurrentMediaFilePath;
+
+
+    private File createMediaFile(String ext) throws IOException {
+        // Create a media file name
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String imageFileName = ext.toUpperCase(Locale.FRANCE) + "_" + timeStamp + "_";
+        File storageDir = getActivity().getBaseContext().getExternalFilesDir(Environment.DIRECTORY_MOVIES);
+        File image = File.createTempFile(
+                imageFileName,  /* prefix */
+                "."+ext,   /* suffix */
+                storageDir      /* directory */
+        );
+
+        // Save a file: path for use with ACTION_VIEW intents
+        mCurrentMediaFilePath = image.getAbsolutePath();
+        return image;
+    }
+
+
 }

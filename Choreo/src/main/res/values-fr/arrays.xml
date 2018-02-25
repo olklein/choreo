@@ -69,13 +69,14 @@
         <item name="Red">#FF0000</item>
     </string-array>
     <string-array name="VideoCommands">
-        <item name="Capture">Prendre</item>
-        <item name="Import">Importer</item>
+        <item name="Photo">Photographier</item>
+        <item name="Capture">Filmer</item>
+        <item name="Import">Importer\n(audio/video/image/pdf)</item>
         <item name="Cleaning">Nettoyer</item>
     </string-array>
     <string-array name="ImportExportCommands">
-        <item name="Import">Importer</item>
-        <item name="Export">Exporter</item>
+        <item name="Import">Importer\nune chorégraphie</item>
+        <item name="Export">Exporter\ncette chorégraphie</item>
     </string-array>
 
 </resources>
