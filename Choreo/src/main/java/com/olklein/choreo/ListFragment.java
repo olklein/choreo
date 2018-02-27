@@ -750,7 +750,7 @@ public class ListFragment extends Fragment {
                     @Override
                     public void onClick(DialogInterface arg0, int arg1) {
                         try {
-                            loadDance(dance_file);
+                            restoreDance(dance_file);
                             if (listAdapter!= null) {
                                 listAdapter.notifyDataSetChanged();
                                 listAdapter.setLastPosition(-1);
@@ -875,7 +875,6 @@ public class ListFragment extends Fragment {
                                 text1.setBackgroundResource(R.drawable.borderfilled);
                                 return view;
                             }
-
                         };
 
                         for (String item :context.getResources().getStringArray(items))
@@ -1079,10 +1078,11 @@ public class ListFragment extends Fragment {
                             if (command == 2) {
                                 try{
                                     Intent si = new Intent(Intent.ACTION_GET_CONTENT);
-                                    String [] types ={"audio/*","video/*","application/pdf"};
+                                    String [] types ={"audio/*","video/*","application/pdf","image/*"};
                                     si.setType("video/*");
                                     si.setType("audio/*");
                                     si.setType("application/pdf");
+                                    si.setType("image/*");
                                     si.putExtra(Intent.EXTRA_MIME_TYPES,types);
 
 
@@ -1240,7 +1240,10 @@ public class ListFragment extends Fragment {
 
     public static void refresh(File dst){
         for (DanceFigure item : mItemArray) {
-            if (item.getComment().equals(mLoadingFileString) && item.getTempo().contains(dst.getName())) item.setComment("");
+            if (item.getComment().equals(mLoadingFileString) && item.getTempo().contains(dst.getName())){
+                item.setComment("");
+                item.setName(" "+dst.getName());
+            }
         }
         try {
             saveDance(dance_file+"onscreen");
@@ -1418,6 +1421,15 @@ public class ListFragment extends Fragment {
         sCreatedItems=mItemArray.size();
         if (listAdapter!= null) listAdapter.notifyDataSetChanged();
     }
+
+    private static void restoreDance(String file) throws IOException {
+        String filePath=mExternalFilesDir+"/"+file;
+        File testFile= new File(filePath);
+        if (testFile.exists()){
+            loadDanceFile(filePath);
+        }
+    }
+
 
     private static void loadDance(String file) throws IOException {
         String filePath=mExternalFilesDir+"/"+file;
@@ -1671,24 +1683,21 @@ public class ListFragment extends Fragment {
                     String uriString = uri.toString();
                     File myFile = new File(uriString);
                     String displayName = null;
-                    String extension="";
 
                     if (uriString.startsWith("content://")) {
                         Cursor cursor = null;
                         try {
-                            cursor = getActivity().getContentResolver().query(uri, null, null, null, null);
+                            cursor = mContentResolver.query(uri, null, null, null, null);
                             if (cursor != null && cursor.moveToFirst()) {
                                 displayName = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
-                                final MimeTypeMap mime = MimeTypeMap.getSingleton();
-                                extension = "."+mime.getExtensionFromMimeType(getActivity().getContentResolver().getType(uri));
+                                Log.d("Choreo", "DisplayName is " + displayName);
                             }
                         } finally {
                             if (cursor != null) cursor.close();
                         }
                     } else if (uriString.startsWith("file://")) {
                         displayName = myFile.getName();
-                        extension="";
-                        ;                    }
+                    }
 
                     String filepath = uri.getPath();
                     if (!filepath.equals("")) {
@@ -1696,27 +1705,37 @@ public class ListFragment extends Fragment {
                         String fileName = src.getName();
                         if (displayName != null) fileName = displayName;
                         Context ctxt = getActivity().getBaseContext();
-                        if (fileName.endsWith(extension)) extension="";
-                        File dest = new File(ctxt.getExternalFilesDir(Environment.DIRECTORY_MOVIES) + "/" + fileName+extension);
-                        File destTMP = new File(ctxt.getExternalFilesDir(Environment.DIRECTORY_MOVIES) + "/" + fileName+extension + ".tmp");
-                        dest.setReadable(false);
+
+                        fileName = fileName.replace("?","");
+                        fileName = fileName.replace("%","");
+
+                        File dest = new File(ctxt.getExternalFilesDir(Environment.DIRECTORY_MOVIES) + "/" + fileName);
+                        File destTMP = new File(ctxt.getExternalFilesDir(Environment.DIRECTORY_MOVIES) + "/" + fileName + ".tmp");
 
                         Uri videoUri = Uri.parse(dest.getAbsolutePath());
-                        String[] video = {"", "VideoURI-" + videoUri.toString(), mLoadingFileString};
-                        addVideo(video);
+                        if (!ListFragment.isMimeTypeSupported(videoUri)){
+                            //Toast.makeText(getContext(), mResources.getString(R.string.action_video_unreadable), Toast.LENGTH_LONG).show();
+                            String[] video = {"", "VideoURI-" + videoUri.toString(),fileName};
+                            addVideo(video);
+                        }else {
+                            dest.setReadable(false);
 
-                        BkgCopier creator = new BkgCopier();
-                        creator.createCopy(getActivity().getBaseContext(), uri, destTMP, dest);
-                        SystemClock.sleep(TimeUnit.SECONDS.toMillis(1));
+                            String[] video = {"", "VideoURI-" + videoUri.toString(), mLoadingFileString};
+                            addVideo(video);
 
-                        try {
-                            saveDance(dance_file + "onscreen");
-                            mItemArray.clear();
-                            if (listAdapter != null) listAdapter.notifyDataSetChanged();
-                            loadDance(dance_file + "onscreen");
+                            BkgCopier creator = new BkgCopier();
+                            creator.createCopy(getActivity().getBaseContext(), uri, destTMP, dest);
+                            SystemClock.sleep(TimeUnit.SECONDS.toMillis(1));
 
-                        } catch (IOException e) {
-                            e.printStackTrace();
+                            try {
+                                saveDance(dance_file + "onscreen");
+                                mItemArray.clear();
+                                if (listAdapter != null) listAdapter.notifyDataSetChanged();
+                                loadDance(dance_file + "onscreen");
+
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
                         }
                     }
                 }
@@ -1725,7 +1744,7 @@ public class ListFragment extends Fragment {
 
         if (requestCode == MEDIA_CAPTURE_REQUEST && resultCode == RESULT_OK) {
             Uri videoUri = Uri.parse(mCurrentMediaFilePath);
-            String[] video = {"", "VideoURI-" + videoUri.toString()};
+            String[] video = {mCurrentMediaFileName, "VideoURI-" + videoUri.toString()};
             addVideo(video);
 
             try {
@@ -1938,6 +1957,14 @@ public class ListFragment extends Fragment {
         return (new File(contentUri.getPath())).exists() && (new File(contentUri.getPath())).canRead() ;
     }
 
+    public static boolean isMimeTypeSupported(Uri contentUri){
+        String mimeType = getMimeType(contentUri);
+        if (mimeType == null) return false;
+        if (!mimeType.startsWith("video") && !mimeType.startsWith("audio")
+                && !mimeType.startsWith("image") && !mimeType.startsWith("application/pdf")) return false;
+        return true ;
+    }
+
 
     private static void openEditVideoItemDialog(final Context context, final int pos) {
         LayoutInflater li = LayoutInflater.from(context);
@@ -1950,11 +1977,16 @@ public class ListFragment extends Fragment {
 
         final EditText input1 = (EditText) promptsView.findViewById(R.id.name);
         input1.setSingleLine();
-        String txtComment =mItemArray.get(pos).getComment();
+        String txtComment = mItemArray.get(pos).getComment();
+        String txtName = mItemArray.get(pos).getName();
         if (txtComment.equals(mLoadingFileString)) {
             input1.setText("");
         }else {
-            input1.setText(mItemArray.get(pos).getComment());
+            if (txtComment.equals("") && !txtName.equals("")){
+                input1.setText(txtName);
+            }else{
+                input1.setText(txtComment);
+            }
         }
 
         alert.setPositiveButton(R.string.OK, new DialogInterface.OnClickListener() {
@@ -2020,7 +2052,6 @@ public class ListFragment extends Fragment {
 
 
             alert.setPositiveButton(buttonID, new DialogInterface.OnClickListener() {
-                //                String mimeType = getMimeType(videoURI);
                 public void onClick(DialogInterface dialog, int whichButton) {
                     String type="video/*";
                     if ( mimeType.startsWith("video")) type="video/*";
@@ -2028,41 +2059,9 @@ public class ListFragment extends Fragment {
                     if ( mimeType.startsWith("image")) type="image/*";
                     if ( mimeType.startsWith("application")) type="application/pdf";
 
-
-                    //                    if (mimeType.contains("text")) {
-//                        Intent takeVideoIntent = new Intent(MediaStore.INTENT_ACTION_TEXT_OPEN_FROM_SEARCH);
-//                        if (takeVideoIntent.resolveActivity(context.getPackageManager()) != null) {
-//                            Intent intent = new Intent(Intent.ACTION_VIEW, videoURI);
-//                            intent.setDataAndType(videoURI, mimeType);
-//                            intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-//                            context.startActivity(intent);
-//                        }
-//                    }else {
-//                    if (mimeType.startsWith("application/pdf")) {
-//                        try {
-//                            Intent intent = new Intent();
-//                            intent.setAction(Intent.ACTION_VIEW);
-//                            MimeTypeMap mime = MimeTypeMap.getSingleton();
-//                            String ext = "pdf";
-//                            String type = mime.getMimeTypeFromExtension(ext);
-//                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-//                                Uri contentUri = getUriForFile(context, "com.olklein.choreo.fileProvider", new File(videoURI.getPath()));
-//                                intent.setDataAndType(contentUri, "application/pdf");
-//                                intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-//                                context.startActivity(Intent.createChooser(intent, mResources.getString(R.string.action_open_file)));
-//
-//                            } else {
-//                                intent.setDataAndType(Uri.fromFile(new File(videoURI.getPath())), type);
-//                                context.startActivity(Intent.createChooser(intent, mResources.getString(R.string.action_open_file)));
-//                            }
-//                        } catch (ActivityNotFoundException anfe) {
-//                            Toast.makeText(context, mResources.getString(R.string.action_pdf), Toast.LENGTH_LONG).show();
-//                        }
-//                    }else{
                     try {
                         Intent intent = new Intent();
                         intent.setAction(Intent.ACTION_VIEW);
-//                            Intent intent = new Intent(Intent.ACTION_VIEW, videoURI);
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                             Uri contentUri = getUriForFile(context, "com.olklein.choreo.fileProvider", new File(videoURI.getPath()));
                             intent.setDataAndType(contentUri,type);
@@ -2070,13 +2069,11 @@ public class ListFragment extends Fragment {
                             context.startActivity(Intent.createChooser(intent, mResources.getString(R.string.action_open_file)));
                         } else {
                             intent.setDataAndType(Uri.fromFile(new File(videoURI.getPath())), type);
-                            //intent.setDataAndType(videoURI, type);
                             context.startActivity(Intent.createChooser(intent, mResources.getString(R.string.action_open_file)));
                         }
                     } catch (ActivityNotFoundException anfe) {
                         Toast.makeText(context, mResources.getString(R.string.action_no_apps), Toast.LENGTH_LONG).show();
                     }
-//                    }
                 }
             });
         } else {
@@ -2110,90 +2107,38 @@ public class ListFragment extends Fragment {
         dialog.show();
     }
 
-
-//    public static Boolean isVideo(Uri fileUri){
-//
-//        MediaMetadataRetriever mdr = new MediaMetadataRetriever();
-//        String path = fileUri.getPath();
-//        try {
-//            mdr.setDataSource(path);
-//            String hasVideo = mdr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_HAS_VIDEO);
-//            String mimeType = mdr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_MIMETYPE);
-//            if (mimeType!=null){
-//                Log.d("Choreo","MIME Tpye is "+mimeType);
-//            }
-//            if (hasVideo!=null){
-//                mdr.release();
-//                return true;
-//            } else{
-//                mdr.release();
-//                return false;
-//            }
-//        }catch(Exception e ){
-//            mdr.release();
-//            return false;
-//        }
-//    }
-//
-//    public static Boolean isAudio(Uri fileUri) {
-//        MediaMetadataRetriever mdr = new MediaMetadataRetriever();
-//        String path = fileUri.getPath();
-//        try {
-//            mdr.setDataSource(path);
-//            String mimeType = mdr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_MIMETYPE);
-//            if (mimeType != null) {
-//                if (mimeType.startsWith("audio")) {
-//                    Log.d("Choreo", "MIME Tpye is " + mimeType);
-//                    mdr.release();
-//                    return true;
-//                }
-//            }
-//        }catch(Exception e ){
-//                mdr.release();
-//                return false;
-//        }
-//        mdr.release();
-//        return false;
-//    }
-
-    public static String getMimeType(Uri uri) {
+   public static String getMimeType(Uri uri) {
         String mimeType = null;
         String scheme = uri.getScheme();
         if (scheme!=null && scheme.equals(ContentResolver.SCHEME_CONTENT)) {
             mimeType = mContentResolver.getType(uri);
         } else {
             String name=uri.toString().replaceAll(" ","");
-            name =name.replaceAll("\\[","");
-            name=name.replaceAll("\\]","");
-            name=name.replaceAll("\\'","");
-            name=name.replaceAll("\\&","");
-            name=name.replaceAll("&quot;","");
-            name=name.replaceAll("\\?","");
+            name =name.replaceAll("\\[","(");
+            name=name.replaceAll("\\]",")");
+            name=name.replaceAll("'","");
+            name=name.replaceAll("&","");
+            name=name.replaceAll("\"","");
+            name=name.replace("?","");
+            name=name.replace("~","");
 
+            String fileExtension = MimeTypeMap.getFileExtensionFromUrl(name).toLowerCase();
+            if (fileExtension.equals("flv")) return ("video/x-flv");
+            if (fileExtension.equals("mov")) return ("video/quicktime") ;
+            if (fileExtension.equals( "wm")) return ("video/x-ms-wm");
+            if (fileExtension.equals( "wmv")) return ("video/x-ms-wmv");
+            if (fileExtension.equals( "wmx")) return ("video/x-ms-wmx");
+            if (fileExtension.equals( "wvx")) return ("video/x-ms-wvx");
+            if (fileExtension.equals( "avi")) return ("video/x-msvideo");
+            if (fileExtension.equals("movie")) return ("video/x-sgi-movie");
 
+            mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileExtension);
 
-
-            String fileExtension = MimeTypeMap.getFileExtensionFromUrl(name);
-            mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileExtension.toLowerCase());
         }
         return mimeType;
     }
 
 
-    //    public static Boolean isImage(Uri fileUri) {
-//        try {
-//            String mimeType = getMimeType(fileUri);
-//            if (mimeType != null) {
-//                if (mimeType.startsWith("image")) {
-//                    Log.d("Choreo", "MIME Tpye is " + mimeType);
-//                    return true;
-//                }
-//            }
-//        }catch(Exception e ){
-//            return false;
-//        }
-//        return false;
-//    }
     public static String getTitle(Uri fileUri){
 
         MediaMetadataRetriever mdr = new MediaMetadataRetriever();
@@ -2230,7 +2175,6 @@ public class ListFragment extends Fragment {
         try {
 
             mdr.setDataSource(path);
-
             String length = mdr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
             String hasVideo = mdr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_HAS_VIDEO);
             if (hasVideo!=null){
@@ -2250,22 +2194,12 @@ public class ListFragment extends Fragment {
                 return null;
             }
         }catch(Exception e ){
+            e.printStackTrace();
             mdr.release();
             return null;
         }
     }
 
-//    public static boolean isPdf(Uri uri) {
-//        String mimeType = getMimeType(uri);
-//        if (mimeType!=null && mimeType.startsWith("application/pdf")){
-//            return true;
-//        }
-//        return false;
-//    }
-
-
-
-    //{
 
     private static Bitmap CreatePageImageExtract( Uri uri) {
         File fileIn = new File(uri.getPath());
@@ -2305,6 +2239,8 @@ public class ListFragment extends Fragment {
 
     //
     String mCurrentMediaFilePath;
+    String mCurrentMediaFileName;
+
 
 
     private File createMediaFile(String ext) throws IOException {
@@ -2320,8 +2256,8 @@ public class ListFragment extends Fragment {
 
         // Save a file: path for use with ACTION_VIEW intents
         mCurrentMediaFilePath = image.getAbsolutePath();
+        mCurrentMediaFileName = image.getName();
+
         return image;
     }
-
-
 }

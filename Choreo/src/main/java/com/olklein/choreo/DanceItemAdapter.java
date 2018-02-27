@@ -117,13 +117,13 @@ public class DanceItemAdapter extends DragItemAdapter<DanceFigure, DanceItemAdap
     @Override
     public void onBindViewHolder(DanceItemAdapter.ViewHolder holder, int position) {
         super.onBindViewHolder(holder, position);
-        String text = mItemList.get(position).getName();
+        String txtName = mItemList.get(position).getName();
 
-        holder.mName.setText(text);
+        holder.mName.setText(txtName);
         holder.mName.setTextColor(0xFF999999);
         holder.mName.setCompoundDrawablesWithIntrinsicBounds(R.drawable.nobox,R.drawable.nobox,R.drawable.nobox,R.drawable.nobox);
 
-        text = mItemList.get(position).getTempo();
+        String text = mItemList.get(position).getTempo();
         holder.mRhythm.setText(text);
 
         holder.mComment.setVisibility(View.GONE);
@@ -144,7 +144,17 @@ public class DanceItemAdapter extends DragItemAdapter<DanceFigure, DanceItemAdap
             holder.mComment.setVisibility(View.GONE);
 
 
-            String path = Uri.parse(holder.mRhythm.getText().toString().replaceFirst("VideoURI-","")).getPath();
+
+            Uri uri = Uri.parse(holder.mRhythm.getText().toString().replaceFirst("VideoURI-", ""));
+            if (!ListFragment.isMimeTypeSupported(uri)){
+                holder.mName.setText(UnreadableFileString+" "+txtComment);
+                holder.mName.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_bug_24x,R.drawable.nobox,R.drawable.nobox,R.drawable.nobox);
+                holder.mItemDrag.setImageResource(R.drawable.ic_broken_image_black_48px);
+                holder.mRhythm.setVisibility(View.GONE);
+                return;
+            }
+
+            String path = uri.getPath();
             holder.mName.setBackgroundColor(0x00E0ECF8); // R.color.list_item_color_dark 0x00E0ECF8
 
             boolean targetFileExist=doesFileExist(path);
@@ -168,7 +178,7 @@ public class DanceItemAdapter extends DragItemAdapter<DanceFigure, DanceItemAdap
                     holder.mName.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_hourglass_empty_24x,R.drawable.nobox,R.drawable.nobox,R.drawable.nobox);
                     holder.mItemDrag.setImageResource(R.drawable.ic_broken_image_black_48px);
                 }else{ // !tmpFileExist && targetFileExist
-                    Uri uri = Uri.parse(holder.mRhythm.getText().toString().replaceFirst("VideoURI-", ""));
+//                    Uri uri = Uri.parse(holder.mRhythm.getText().toString().replaceFirst("VideoURI-", ""));
                     if (ListFragment.isMimeTypeValid(uri)){
                         String mimeType = ListFragment.getMimeType(uri);
                         Bitmap bitmap = ListFragment.getThumbnail(uri);
@@ -188,12 +198,22 @@ public class DanceItemAdapter extends DragItemAdapter<DanceFigure, DanceItemAdap
                                     String title=ListFragment.getTitle(uri);
                                     if (title!=null) {
                                         holder.mName.setText(" " +title);
+                                    }else{
+                                        if (!txtName.equals("")) {
+                                            holder.mName.setText(txtName);
+                                        }
                                     }
+
                                 }
                             }
                             else{
                                 if (mimeType.startsWith("image")) {
                                     holder.mItemDrag.setImageResource(R.drawable.ic_camera_roll_black_48px);
+                                    if (!txtName.equals("")) {
+                                        holder.mName.setText(txtName);
+                                    }else{
+                                        holder.mName.setText(txtComment);
+                                    }
                                 } else{
                                     if (mimeType.startsWith("application/pdf")){
                                         holder.mItemDrag.setImageResource(R.drawable.ic_attachment_black_48px);
@@ -201,8 +221,17 @@ public class DanceItemAdapter extends DragItemAdapter<DanceFigure, DanceItemAdap
 //                                        if (txtComment.equals("")){
 //                                            holder.mName.setText(R.string.clickToOpen);
 //                                        }else{
+                                        if (!txtName.equals("")) {
+                                            holder.mName.setText(txtName);
+                                        }else{
                                             holder.mName.setText(txtComment);
-//                                        }
+                                        }
+                                    }else{
+                                        if (!txtName.equals("")) {
+                                            holder.mName.setText(txtName);
+                                        }else{
+                                            holder.mName.setText(txtComment);
+                                        }
                                     }
                                 }
 
@@ -217,17 +246,26 @@ public class DanceItemAdapter extends DragItemAdapter<DanceFigure, DanceItemAdap
 //                                if (txtComment.equals("")){
 //                                    holder.mName.setText(R.string.clickToOpen);
 //                                }else{
+                                if (!txtName.equals("")) {
+                                    holder.mName.setText(txtName);
+                                }else{
                                     holder.mName.setText(txtComment);
+                                }
+
 //                                }
                             }else{
                                 holder.mName.setGravity(Gravity.CENTER_VERTICAL);
                                 holder.mName.setCompoundDrawablesWithIntrinsicBounds(
                                         R.drawable.ic_play_arrow_24x,
                                         R.drawable.nobox,R.drawable.nobox,R.drawable.nobox);
-                                if (txtComment.equals("")){
+                                if (txtComment.equals("") && txtName.equals("")){
                                     holder.mName.setText(R.string.clickToPlay);
                                 }else{
-                                    holder.mName.setText(txtComment);
+                                    if (txtName.equals("")) {
+                                        holder.mName.setText(txtComment);
+                                    }else{
+                                        holder.mName.setText(txtName);
+                                    }
                                 }
                             }
                         }
