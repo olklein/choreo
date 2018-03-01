@@ -139,7 +139,7 @@ public class ListFragment extends Fragment {
     {
         mDrawer = drawer;
     }
-    private static Bitmap icBmpFile;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -166,7 +166,6 @@ public class ListFragment extends Fragment {
         final View view = inflater.inflate(R.layout.list_layout, container, false);
 
         Bundle bundle = getArguments();
-        icBmpFile = BitmapFactory.decodeResource(getResources(),R.drawable.ic_insert_drive_file_black_48px);
 
         dance_file = bundle.getString(ChoreographerConstants.FILE);
 
@@ -394,6 +393,7 @@ public class ListFragment extends Fragment {
                         if (command == 0) {
                             Intent si = new Intent(Intent.ACTION_GET_CONTENT);
                             si.setType("*/*");
+                            si.addCategory(Intent.CATEGORY_OPENABLE);
                             startActivityForResult(si, IMPORT_REQUEST);
                         }
                         if (command == 1) {
@@ -1078,11 +1078,13 @@ public class ListFragment extends Fragment {
                             if (command == 2) {
                                 try{
                                     Intent si = new Intent(Intent.ACTION_GET_CONTENT);
-                                    String [] types ={"audio/*","video/*","application/pdf","image/*"};
-                                    si.setType("video/*");
-                                    si.setType("audio/*");
-                                    si.setType("application/pdf");
-                                    si.setType("image/*");
+                                    String [] types ={"video/*","audio/*","application/pdf","image/*"};
+//                                    si.setType("audio/*");
+//                                    si.setType("application/pdf");
+//                                    si.setType("image/*");
+                                    //si.setType("*/*");
+                                    si.setType("*/*");
+                                    si.addCategory(Intent.CATEGORY_OPENABLE);
                                     si.putExtra(Intent.EXTRA_MIME_TYPES,types);
 
 
@@ -1242,7 +1244,14 @@ public class ListFragment extends Fragment {
         for (DanceFigure item : mItemArray) {
             if (item.getComment().equals(mLoadingFileString) && item.getTempo().contains(dst.getName())){
                 item.setComment("");
-                item.setName(" "+dst.getName());
+                Uri uri = Uri.parse(item.getTempo().replaceFirst("VideoURI-", ""));
+                String title = getTitle(uri);
+
+                if (title.equals("")) {
+                    item.setName(" " + dst.getName());
+                }else{
+                    item.setName(" "+title);
+                }
             }
         }
         try {
@@ -1608,70 +1617,46 @@ public class ListFragment extends Fragment {
             if (resultCode == RESULT_OK) {
                 Uri uri = data.getData();
                 if (uri != null) {
-                    //New getname
-                    String uriString = uri.toString();
-                    File myFile = new File(uriString);
-                    String displayName = null;
+                    String displayName = getDisplayName(uri);
+                    String filepath = "";
+                    String extension = getExtension(uri);
 
-                    if (uriString.startsWith("content://")) {
-                        Cursor cursor = null;
-                        try {
-                            cursor = getActivity().getContentResolver().query(uri, null, null, null, null);
-                            if (cursor != null && cursor.moveToFirst()) {
-                                displayName = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
-                            }
-                        } finally {
-                            if (cursor != null) cursor.close();
-                        }
-                    } else if (uriString.startsWith("file://")) {
-                        displayName = myFile.getName();
+                    int lastDotIndex =displayName.lastIndexOf('.');
+                    if (lastDotIndex<0 || lastDotIndex<displayName.length()-5){
+                        displayName=displayName+"."+extension;
+                        lastDotIndex =displayName.lastIndexOf('.');
                     }
-                    if (displayName != null) Log.d("Choreo", "filename is :" + displayName);
+                    if (lastDotIndex > 1)
+                    {
+                        displayName =
+                                displayName.substring(0, lastDotIndex).replace(".", "")
+                                        + displayName.substring(lastDotIndex);
+                    }
 
-
-                    String filepath = uri.getPath();
+                    filepath = uri.getPath();
                     if (!filepath.equals("")) {
                         File src = new File(filepath);
-                        String fileName = src.getName();
-                        if (displayName != null) fileName = displayName;
-                        dance_file = ChoreographerConstants.addNew(getActivity().getBaseContext(), fileName);
-                        File dest = new File(mExternalFilesDir + "/" + dance_file);
-
-                        try {
-                            copy(uri, dest);
-                        } catch (IOException e) {
-                            Log.d(TAG, "error =" + fileName);
-                            e.printStackTrace();
+                        String fileName;
+                        if (displayName != null && !displayName.equals("")){
+                            fileName = displayName;
+                        }else{
+                            fileName = src.getName();
                         }
-                        try {
-                            mItemArray.clear();
-                            if (listAdapter != null) listAdapter.notifyDataSetChanged();
-                            loadDance(dance_file);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                        ChoreographerConstants.init(mExternalFilesDir);
-                        DanceCustomAdapter danceListAdapter =
-                                new DanceCustomAdapter(getContext(),
-                                        R.layout.dance_custom_list,
-                                        ChoreographerConstants.DANCE_LIST_FILENAME,mDrawer);
+                        Context ctxt = getActivity().getBaseContext();
 
-                        ListView drawerList = (ListView) getActivity().findViewById(R.id.left_drawer);
+                        fileName = fileName.replace("?","");
+                        fileName = fileName.replace("%","");
 
-                        drawerList.setAdapter(danceListAdapter);
-                        int index = ChoreographerConstants.getIndex(dance_file);
-                        if (index != -1) {
-                            danceListAdapter.setClicked(index);
-                            ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
-                            if (actionBar != null) {
-                                actionBar.setTitle(dance_file);
-                                actionBar.setDisplayHomeAsUpEnabled(true);
-                                actionBar.setHomeButtonEnabled(true);
-                                DrawerLayout mDrawerLayout = (DrawerLayout) getActivity().findViewById(R.id.drawer_layout);
-                                mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
-                            }
+                        File test = new File(ctxt.getExternalFilesDir(Environment.DIRECTORY_MOVIES) + "/" + fileName);
+
+                        Uri fileUri = Uri.parse(test.getAbsolutePath());
+                        if (!isExtensionSupported(extension) &&
+                                !ListFragment.isMimeTypeSupported(fileUri)){
+                            dance_file = ChoreographerConstants.addNew(getActivity().getBaseContext(), fileName);
+                            importChoreoFile(ctxt, uri, fileName);
+                        }else {
+                            importMediaFile(ctxt, uri, fileName);
                         }
-                        getActivity().supportInvalidateOptionsMenu();
                     }
                 }
             }
@@ -1680,62 +1665,46 @@ public class ListFragment extends Fragment {
             if (resultCode == RESULT_OK) {
                 Uri uri = data.getData();
                 if (uri != null) {
-                    String uriString = uri.toString();
-                    File myFile = new File(uriString);
-                    String displayName = null;
+                    String filepath = "";
+                    String displayName = getDisplayName(uri);
 
-                    if (uriString.startsWith("content://")) {
-                        Cursor cursor = null;
-                        try {
-                            cursor = mContentResolver.query(uri, null, null, null, null);
-                            if (cursor != null && cursor.moveToFirst()) {
-                                displayName = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
-                                Log.d("Choreo", "DisplayName is " + displayName);
-                            }
-                        } finally {
-                            if (cursor != null) cursor.close();
-                        }
-                    } else if (uriString.startsWith("file://")) {
-                        displayName = myFile.getName();
+                    String extension = getExtension(uri);
+                    int lastDotIndex =displayName.lastIndexOf('.');
+                    if (lastDotIndex<0 || lastDotIndex<displayName.length()-5){
+                        displayName=displayName+"."+extension;
+                        lastDotIndex =displayName.lastIndexOf('.');
+                    }
+                    if (lastDotIndex > 1)
+                    {
+                        displayName =
+                                displayName.substring(0, lastDotIndex).replace(".", "_")
+                                        + displayName.substring(lastDotIndex);
                     }
 
-                    String filepath = uri.getPath();
+                    filepath = uri.getPath();
                     if (!filepath.equals("")) {
                         File src = new File(filepath);
-                        String fileName = src.getName();
-                        if (displayName != null) fileName = displayName;
+                        String fileName;
+                        if (displayName != null && !displayName.equals("")){
+                            fileName = displayName;
+                        }else{
+                            fileName = src.getName();
+                        }
                         Context ctxt = getActivity().getBaseContext();
 
                         fileName = fileName.replace("?","");
                         fileName = fileName.replace("%","");
 
-                        File dest = new File(ctxt.getExternalFilesDir(Environment.DIRECTORY_MOVIES) + "/" + fileName);
-                        File destTMP = new File(ctxt.getExternalFilesDir(Environment.DIRECTORY_MOVIES) + "/" + fileName + ".tmp");
+                        File test = new File(ctxt.getExternalFilesDir(Environment.DIRECTORY_MOVIES) + "/" + fileName);
 
-                        Uri videoUri = Uri.parse(dest.getAbsolutePath());
-                        if (!ListFragment.isMimeTypeSupported(videoUri)){
+                        Uri videoUri = Uri.parse(test.getAbsolutePath());
+                        if (!isExtensionSupported(extension) &&
+                                !ListFragment.isMimeTypeSupported(videoUri)){
                             //Toast.makeText(getContext(), mResources.getString(R.string.action_video_unreadable), Toast.LENGTH_LONG).show();
                             String[] video = {"", "VideoURI-" + videoUri.toString(),fileName};
                             addVideo(video);
                         }else {
-                            dest.setReadable(false);
-
-                            String[] video = {"", "VideoURI-" + videoUri.toString(), mLoadingFileString};
-                            addVideo(video);
-
-                            BkgCopier creator = new BkgCopier();
-                            creator.createCopy(getActivity().getBaseContext(), uri, destTMP, dest);
-                            SystemClock.sleep(TimeUnit.SECONDS.toMillis(1));
-
-                            try {
-                                saveDance(dance_file + "onscreen");
-                                mItemArray.clear();
-                                if (listAdapter != null) listAdapter.notifyDataSetChanged();
-                                loadDance(dance_file + "onscreen");
-
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
+                            importMediaFile(ctxt, uri, fileName);
                         }
                     }
                 }
@@ -1746,6 +1715,7 @@ public class ListFragment extends Fragment {
             Uri videoUri = Uri.parse(mCurrentMediaFilePath);
             String[] video = {mCurrentMediaFileName, "VideoURI-" + videoUri.toString()};
             addVideo(video);
+//            galleryAddPic();
 
             try {
                 saveDance(dance_file + "onscreen");
@@ -1757,58 +1727,154 @@ public class ListFragment extends Fragment {
                 e.printStackTrace();
             }
         }
+    }
 
-//        if (requestCode == VIDEO_CAPTURE_REQUEST && resultCode == RESULT_OK) {
-//            Uri uri = data.getData();
-//            if (uri!=null){
-//                String uriString = uri.toString();
-//
-//                File myFile = new File(uriString);
-//                String displayName = null;
-//
-//                if (uriString.startsWith("content://")) {
-//                    Cursor cursor = null;
-//                    try {
-//                        cursor = getActivity().getContentResolver().query(uri, null, null, null, null);
-//                        if (cursor != null && cursor.moveToFirst()) {
-//                            displayName = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
-//                        }
-//                    } finally {
-//                        if (cursor != null) cursor.close();
-//                    }
-//                } else if (uriString.startsWith("file://")) {
-//                    displayName = myFile.getName();
-//                }
-//
-//                String filepath = uri.getPath();
-//                if (!filepath.equals("")) {
-//                    File src = new File(filepath);
-//                    String fileName = src.getName();
-//                    if (displayName != null) fileName = displayName;
-//                    File dest = new File(getActivity().getBaseContext().getExternalFilesDir(Environment.DIRECTORY_MOVIES) + "/" + fileName);
-//                    File destTMP = new File(getActivity().getBaseContext().getExternalFilesDir(Environment.DIRECTORY_MOVIES) + "/" + fileName+".tmp");
-//                    dest.setReadable(false);
-//
-//                    Uri videoUri = Uri.parse(dest.getAbsolutePath());
-//                    String[] video = {"", "VideoURI-" + videoUri.toString()};
-//                    addVideo(video);
-//
-//                    BkgCopier creator = new BkgCopier();
-//                    creator.createCopy(getActivity().getBaseContext(), uri,destTMP,dest);
-//                    SystemClock.sleep(TimeUnit.SECONDS.toMillis(1));
-//
-//                    try {
-//                        saveDance(dance_file + "onscreen");
-//                        mItemArray.clear();
-//                        if (listAdapter != null) listAdapter.notifyDataSetChanged();
-//                        loadDance(dance_file + "onscreen");
-//
-//                    } catch (IOException e) {
-//                        e.printStackTrace();
-//                    }
-//                }
-//            }
-//        }
+    private boolean isExtensionSupported(String extension) {
+        if (extension.equals("")){
+            return false;
+        }else{
+            final MimeTypeMap mime = MimeTypeMap.getSingleton();
+
+            String mimeType = mime.getMimeTypeFromExtension(extension);
+            if (mimeType == null) return false;
+            if (!mimeType.startsWith("video") && !mimeType.startsWith("audio")
+                    && !mimeType.startsWith("image") && !mimeType.startsWith("application/pdf")) return false;
+        }
+        return true;
+    }
+
+    private String getExtension(Uri uri) {
+        String uriString = uri.toString();
+        String extension="";
+        if (uriString.startsWith("content://")) {
+            Cursor cursor = null;
+            try {
+                cursor = mContentResolver.query(uri, null, null, null, null);
+                if (cursor != null && cursor.moveToFirst()) {
+                    final MimeTypeMap mime = MimeTypeMap.getSingleton();
+                    extension = mime.getExtensionFromMimeType(mContentResolver.getType(uri));
+                    if (extension==null) {
+                        extension = "";
+                    }
+                }
+            } finally {
+                if (cursor != null) cursor.close();
+            }
+        } else if (uriString.startsWith("file://")) {
+            File myFile = new File(uriString);
+            extension = myFile.getName();
+            int lastIndex = extension.lastIndexOf('.');
+            if (lastIndex > 0) {
+                extension = extension.substring(lastIndex);
+            } else {
+                extension = "";
+            }
+        }
+        return extension;
+    }
+
+    private String getDisplayName(Uri uri) {
+        String uriString = uri.toString();
+        String displayName = null;
+
+        if (uriString.startsWith("content://")) {
+            Cursor cursor = null;
+            try {
+                cursor = getActivity().getContentResolver().query(uri, null, null, null, null);
+                if (cursor != null && cursor.moveToFirst()) {
+                    int index = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+                    if (index>=0){
+                        displayName = cursor.getString(index);
+                        Log.d("Choreo", "DisplayName is " + displayName);
+                    }else {
+                        displayName = "";
+                        Log.d("Choreo", "DisplayName is empty!" + displayName);
+                    }
+                }
+            } finally {
+                if (cursor != null) cursor.close();
+            }
+        } else if (uriString.startsWith("file://")) {
+            File myFile = new File(uriString);
+            displayName = myFile.getName();
+        }
+        return displayName;
+    }
+
+    private void importChoreoFile(Context ctxt, Uri uri, String fileName) {
+        File dest = new File(mExternalFilesDir + "/" + dance_file);
+
+        try {
+            copy(uri, dest);
+        } catch (IOException e) {
+            Log.d(TAG, "error =" + fileName);
+            e.printStackTrace();
+            Toast.makeText(ctxt,
+                    mResources.getString(R.string.action_unvalid_file),
+                    Toast.LENGTH_LONG).show();
+            return;
+        }
+        try {
+            mItemArray.clear();
+            if (listAdapter != null) listAdapter.notifyDataSetChanged();
+            loadDance(dance_file);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        ChoreographerConstants.init(mExternalFilesDir);
+        DanceCustomAdapter danceListAdapter =
+                new DanceCustomAdapter(getContext(),
+                        R.layout.dance_custom_list,
+                        ChoreographerConstants.DANCE_LIST_FILENAME,mDrawer);
+
+        ListView drawerList = (ListView) getActivity().findViewById(R.id.left_drawer);
+
+        drawerList.setAdapter(danceListAdapter);
+        int index = ChoreographerConstants.getIndex(dance_file);
+        if (index != -1) {
+            danceListAdapter.setClicked(index);
+            ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
+            if (actionBar != null) {
+                actionBar.setTitle(dance_file);
+                actionBar.setDisplayHomeAsUpEnabled(true);
+                actionBar.setHomeButtonEnabled(true);
+                DrawerLayout mDrawerLayout = (DrawerLayout) getActivity().findViewById(R.id.drawer_layout);
+                mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
+            }
+        }
+        getActivity().supportInvalidateOptionsMenu();
+
+    }
+
+    private void importMediaFile(Context ctxt, Uri uri, String fileName) {
+        File dest = new File(ctxt.getExternalFilesDir(Environment.DIRECTORY_MOVIES) + "/" + fileName);
+        File destTMP = new File(ctxt.getExternalFilesDir(Environment.DIRECTORY_MOVIES) + "/" + fileName + ".tmp");
+
+        Uri videoUri = Uri.parse(dest.getAbsolutePath());
+        if (!ListFragment.isMimeTypeSupported(videoUri)){
+            //Toast.makeText(getContext(), mResources.getString(R.string.action_video_unreadable), Toast.LENGTH_LONG).show();
+            String[] video = {"", "VideoURI-" + videoUri.toString(),fileName};
+            addVideo(video);
+        }else {
+            dest.setReadable(false);
+
+            String[] video = {"", "VideoURI-" + videoUri.toString(), mLoadingFileString};
+            addVideo(video);
+
+            BkgCopier creator = new BkgCopier();
+            creator.createCopy(getActivity().getBaseContext(), uri, destTMP, dest);
+            SystemClock.sleep(TimeUnit.SECONDS.toMillis(1));
+
+            try {
+                saveDance(dance_file + "onscreen");
+                mItemArray.clear();
+                if (listAdapter != null) listAdapter.notifyDataSetChanged();
+                loadDance(dance_file + "onscreen");
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
 
@@ -1949,13 +2015,22 @@ public class ListFragment extends Fragment {
 
     }
 
-    public static boolean isMimeTypeValid(Uri contentUri){
+    public static String isMimeTypeValid(Uri contentUri){
         String mimeType = getMimeType(contentUri);
-        if (mimeType == null) return false;
+        if (mimeType == null) return null;
         if (!mimeType.startsWith("video") && !mimeType.startsWith("audio")
-                && !mimeType.startsWith("image") && !mimeType.startsWith("application/pdf")) return false;
-        return (new File(contentUri.getPath())).exists() && (new File(contentUri.getPath())).canRead() ;
+                && !mimeType.startsWith("image") && !mimeType.startsWith("application/pdf")) return null;
+        if ((new File(contentUri.getPath())).exists() && (new File(contentUri.getPath())).canRead()) return mimeType ;
+        return null;
     }
+
+//    public static boolean isMimeTypeValid(Uri contentUri){
+//        String mimeType = getMimeType(contentUri);
+//        if (mimeType == null) return false;
+//        if (!mimeType.startsWith("video") && !mimeType.startsWith("audio")
+//                && !mimeType.startsWith("image") && !mimeType.startsWith("application/pdf")) return false;
+//        return (new File(contentUri.getPath())).exists() && (new File(contentUri.getPath())).canRead() ;
+//    }
 
     public static boolean isMimeTypeSupported(Uri contentUri){
         String mimeType = getMimeType(contentUri);
@@ -2019,16 +2094,15 @@ public class ListFragment extends Fragment {
         alert.show();
     }
 
-
-
     public static void openItemVideoDialog(final View view, final int pos, final Uri videoURI) {
         final Context context = view.getContext();
         final AlertDialog.Builder alert = new AlertDialog.Builder(context);
         alert.setIcon(R.mipmap.ic_launcher);
         alert.setTitle(R.string.action_video_delete_or_play);
 
-        if (isMimeTypeValid(videoURI)) {
-            final String mimeType = getMimeType(videoURI);
+        final String mimeType = isMimeTypeValid(videoURI);
+        if (mimeType!=null) {
+
             alert.setNegativeButton(R.string.Editer, new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {
                     // Edit
@@ -2049,7 +2123,6 @@ public class ListFragment extends Fragment {
                 buttonID= R.string.openPDF;
                 alert.setTitle(R.string.action_pdf_delete_or_open);
             }
-
 
             alert.setPositiveButton(buttonID, new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {
@@ -2107,14 +2180,16 @@ public class ListFragment extends Fragment {
         dialog.show();
     }
 
-   public static String getMimeType(Uri uri) {
+    public static String getMimeType(Uri uri) {
         String mimeType = null;
         String scheme = uri.getScheme();
         if (scheme!=null && scheme.equals(ContentResolver.SCHEME_CONTENT)) {
             mimeType = mContentResolver.getType(uri);
         } else {
-            String name=uri.toString().replaceAll(" ","");
-            name =name.replaceAll("\\[","(");
+            String name;
+            name=uri.toString();
+            name=name.replaceAll(" ","");
+            name=name.replaceAll("\\[","(");
             name=name.replaceAll("\\]",")");
             name=name.replaceAll("'","");
             name=name.replaceAll("&","");
@@ -2160,8 +2235,13 @@ public class ListFragment extends Fragment {
     }
 
 
-    public static Bitmap getThumbnail(Uri fileUri){
-        String mimeType = getMimeType(fileUri);
+//    public static Bitmap getThumbnail(Uri uri) {
+//        String mimeType = getMimeType(uri);
+//        return getThumbnail(uri, mimeType);
+//    }
+
+    public static Bitmap getThumbnail(Uri fileUri, String mimeType){
+
 
         if (mimeType!=null && mimeType.startsWith("image")){
             return BitmapFactory.decodeFile(fileUri.getPath());
@@ -2237,11 +2317,8 @@ public class ListFragment extends Fragment {
         return null;
     }
 
-    //
     String mCurrentMediaFilePath;
     String mCurrentMediaFileName;
-
-
 
     private File createMediaFile(String ext) throws IOException {
         // Create a media file name
@@ -2259,5 +2336,12 @@ public class ListFragment extends Fragment {
         mCurrentMediaFileName = image.getName();
 
         return image;
+    }
+    private void galleryAddPic() {
+        Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+        File f = new File(mCurrentMediaFilePath);
+        Uri contentUri = Uri.fromFile(f);
+        mediaScanIntent.setData(contentUri);
+        getActivity().getBaseContext().getApplicationContext().sendBroadcast(mediaScanIntent);
     }
 }
