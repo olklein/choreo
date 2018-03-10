@@ -133,4 +133,6 @@
     <string name="contentDelete">%s removed from Choreo space.</string>
     <string name="close">Close</string>
     <string name="remove">Remove</string>
+    <string name="removeButton">Remove</string>
+
 </resources>
