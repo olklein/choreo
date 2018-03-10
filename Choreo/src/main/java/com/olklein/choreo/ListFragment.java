@@ -2549,7 +2549,7 @@ public class ListFragment extends Fragment {
             }
         });
 
-        alert.setPositiveButton(R.string.remove, new DialogInterface.OnClickListener() {
+        alert.setPositiveButton(R.string.removeButton, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int whichButton) {
                 BkgCheckUnused cleaner = new BkgCheckUnused();
                 cleaner.setup(context);
