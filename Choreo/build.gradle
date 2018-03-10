@@ -7,7 +7,7 @@ android {
         applicationId "com.olklein.choreo"
         minSdkVersion 16
         targetSdkVersion 27
-        versionCode 27
+        versionCode 29
         versionName "4.0"
         vectorDrawables.useSupportLibrary = true
     }
