@@ -115,6 +115,6 @@
     <string name="contentDelete">%s retiré de l\'espace de Choreo.</string>
     <string name="close">Fermer</string>
     <string name="remove">Retirer</string>
-
+    <string name="removeButton">Supprimer</string>
 
 </resources>
