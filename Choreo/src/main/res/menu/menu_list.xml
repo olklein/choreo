@@ -9,7 +9,7 @@
     </item>
     <item
         android:id="@+id/action_video"
-        android:title="@string/action_audiovideo"
+        android:title="@string/action_audiovideoPDF"
         app:showAsAction="never">
     </item>
     <item

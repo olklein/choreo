@@ -73,10 +73,7 @@ class ChoreographerConstants {
         int foundIndex = getIndex(newFilename);
 
         if (null != home) {
-            if (home.exists()) {
-                Log.d("Files", home.getAbsolutePath());
-            }
-            if (home.isDirectory()) {
+            if (home.exists() && home.isDirectory()) {
                 File[] listOfFiles = home.listFiles();
 
                 for (File file : listOfFiles) {
@@ -163,10 +160,8 @@ class ChoreographerConstants {
         if (null != home) {
             MaxFilenameLength = 127 - home.getAbsolutePath().length() - 2 - 8;
             Log.d(TAG, "MaxFilenameLength =" + String.valueOf(MaxFilenameLength));
-            if (home.exists()) {
-                Log.d("Files", home.getAbsolutePath());
-            }
-            if (home.isDirectory()) {
+
+            if (home.exists() && home.isDirectory()) {
                 File[] listOfFiles = home.listFiles();
 
                 for (File file : listOfFiles) {

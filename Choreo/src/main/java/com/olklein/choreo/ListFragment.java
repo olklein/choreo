@@ -29,6 +29,7 @@ package com.olklein.choreo;
      then also delete it in the license file.
  */
 
+import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.ActivityNotFoundException;
 import android.content.ContentResolver;
@@ -58,7 +59,6 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.app.AppCompatDelegate;
-import android.support.v7.app.NotificationCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.text.Editable;
 import android.text.InputFilter;
@@ -109,8 +109,6 @@ import static android.graphics.Bitmap.createBitmap;
 import static android.support.v4.content.FileProvider.getUriForFile;
 import static com.olklein.choreo.R.string.Add_title;
 import static com.olklein.choreo.R.string.Figure_Editor;
-
-
 import static com.olklein.choreo.Syllabus.setDance;
 
 public class ListFragment extends Fragment {
@@ -130,11 +128,22 @@ public class ListFragment extends Fragment {
 
     private static String dance_file;
     private boolean isSyllabus=false;
+    private static boolean isMediaFolder=false;
+
     private static String mExternalFilesDir;
     private static String mLoadingFileString;
     private DrawerLayout mDrawer;
     private static ContentResolver mContentResolver;
     private static Resources mResources;
+
+    public static boolean isMediaFolder() {
+        return isMediaFolder;
+    }
+
+    public static void setMediaFolder(boolean mediaFolder) {
+        ListFragment.isMediaFolder = mediaFolder;
+    }
+
     public void setDrawer(DrawerLayout drawer)
     {
         mDrawer = drawer;
@@ -153,7 +162,7 @@ public class ListFragment extends Fragment {
 
         Bundle bundle = getArguments();
         dance_file = bundle.getString(ChoreographerConstants.FILE);
-        mLoadingFileString = getString(R.string.action_video_loadongoing);
+        mLoadingFileString = getString(R.string.action_loadongoing);
         sCreatedItems = 0;
         setHasOptionsMenu(true);
         AppCompatDelegate.setCompatVectorFromResourcesEnabled(true);
@@ -183,11 +192,10 @@ public class ListFragment extends Fragment {
             @Override
             public void onItemDragEnded(int fromPosition, int toPosition) {
                 //save only if not a syllabus
-                if(!isSyllabus) {
+                if(!isSyllabus && !isMediaFolder) {
                     try {
                         saveDance(dance_file + "onscreen");
-                        mItemArray.clear();
-                        if (listAdapter != null) listAdapter.notifyDataSetChanged();
+                        updateFragmentList();
                         loadDance(dance_file);
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -246,6 +254,7 @@ public class ListFragment extends Fragment {
         if (dr!=null) {
             isDrawerOpen = dr.isDrawerOpen(GravityCompat.START);
         }
+
         if (isDrawerOpen) {
             menu.findItem(R.id.action_syllabus).setVisible(false);
             menu.findItem(R.id.action_show_comment).setVisible(false);
@@ -259,55 +268,81 @@ public class ListFragment extends Fragment {
             menu.findItem(R.id.action_show_syllabus).setVisible(false);
             menu.findItem(R.id.action_view).setVisible(false);
             menu.findItem(R.id.action_new).setVisible(false);
-        }else{
-            if(!isSyllabus) {
-                menu.findItem(R.id.action_syllabus).setVisible(true);
-                menu.findItem(R.id.action_import_export).setVisible(true);
-                if (Syllabus.getDanceId()== R.id.allDances){
-                    menu.findItem(R.id.action_show_syllabus).setVisible(false);
-                }else{
-                    menu.findItem(R.id.action_show_syllabus).setVisible(true);
-                }
-                if (dance_file.equals("")) {
-                    menu.findItem(R.id.action_add_figure).setVisible(false);
-                    menu.findItem(R.id.action_video).setVisible(false);
-                    menu.findItem(R.id.action_show_comment).setVisible(false);
-                    menu.findItem(R.id.action_hide_comment).setVisible(false);
-                    menu.findItem(R.id.action_restore).setVisible(false);
-                    menu.findItem(R.id.action_view).setVisible(false);
-                    menu.findItem(R.id.action_save).setVisible(false);
-                    menu.findItem(R.id.action_saveaspdf).setVisible(false);
-                    menu.findItem(R.id.action_import_export).setVisible(true);
-                    menu.findItem(R.id.action_new).setVisible(true);
-                }else{
-                    menu.findItem(R.id.action_add_figure).setVisible(true);
-                    menu.findItem(R.id.action_video).setVisible(true);
-                    menu.findItem(R.id.action_show_comment).setVisible(!listAdapter.isCommentEnabled());
-                    menu.findItem(R.id.action_hide_comment).setVisible(listAdapter.isCommentEnabled());
-                    menu.findItem(R.id.action_restore).setVisible(true);
-                    menu.findItem(R.id.action_view).setVisible(false);
-                    menu.findItem(R.id.action_save).setVisible(true);
-                    menu.findItem(R.id.action_saveaspdf).setVisible(true);
-                    menu.findItem(R.id.action_import_export).setVisible(true);
-                    menu.findItem(R.id.action_new).setVisible(false);
-                }
-            }else{
-                menu.findItem(R.id.action_syllabus).setVisible(true);
-                menu.findItem(R.id.action_show_comment).setVisible(!listAdapter.isCommentEnabled());
-                menu.findItem(R.id.action_hide_comment).setVisible(listAdapter.isCommentEnabled());
+            menu.findItem(R.id.action_show_passport).setVisible(false);
+        }else {
+            if (isMediaFolder) {
+                menu.findItem(R.id.action_syllabus).setVisible(false);
+                menu.findItem(R.id.action_show_comment).setVisible(false);
+                menu.findItem(R.id.action_hide_comment).setVisible(false);
                 menu.findItem(R.id.action_add_figure).setVisible(false);
-                menu.findItem(R.id.action_video).setVisible(false);
+
+                if (isMediaFolderEmpty(getContext())) {
+                    menu.findItem(R.id.action_video).setVisible(false);
+                }else{
+                    menu.findItem(R.id.action_video).setVisible(true);
+                    menu.findItem(R.id.action_video).setTitle(getResources().getString(R.string.clean));
+                }
+
                 menu.findItem(R.id.action_restore).setVisible(false);
-                menu.findItem(R.id.action_save).setVisible(true);
-                menu.findItem(R.id.action_saveaspdf).setVisible(true);
+                menu.findItem(R.id.action_save).setVisible(false);
+                menu.findItem(R.id.action_saveaspdf).setVisible(false);
                 menu.findItem(R.id.action_import_export).setVisible(false);
                 menu.findItem(R.id.action_new).setVisible(false);
-                if (Syllabus.getDanceId()== R.id.allDances){
-                    menu.findItem(R.id.action_show_syllabus).setVisible(false);
-                }else{
-                    menu.findItem(R.id.action_show_syllabus).setVisible(true);
-                }
+                menu.findItem(R.id.action_show_syllabus).setVisible(false);
+                menu.findItem(R.id.action_show_passport).setVisible(false);
                 menu.findItem(R.id.action_view).setVisible(false);
+            } else{
+                menu.findItem(R.id.action_show_passport).setVisible(true);
+                if (!isSyllabus) {
+                    menu.findItem(R.id.action_syllabus).setVisible(true);
+                    menu.findItem(R.id.action_import_export).setVisible(true);
+                    if (Syllabus.getDanceId() == R.id.allDances) {
+                        menu.findItem(R.id.action_show_syllabus).setVisible(false);
+                    } else {
+                        menu.findItem(R.id.action_show_syllabus).setVisible(true);
+                    }
+                    if (dance_file.equals("")) {
+                        menu.findItem(R.id.action_add_figure).setVisible(false);
+                        menu.findItem(R.id.action_video).setVisible(false);
+                        menu.findItem(R.id.action_show_comment).setVisible(false);
+                        menu.findItem(R.id.action_hide_comment).setVisible(false);
+                        menu.findItem(R.id.action_restore).setVisible(false);
+                        menu.findItem(R.id.action_view).setVisible(false);
+                        menu.findItem(R.id.action_save).setVisible(false);
+                        menu.findItem(R.id.action_saveaspdf).setVisible(false);
+                        menu.findItem(R.id.action_import_export).setVisible(true);
+                        menu.findItem(R.id.action_new).setVisible(true);
+                    } else {
+                        menu.findItem(R.id.action_add_figure).setVisible(true);
+                        menu.findItem(R.id.action_video).setVisible(true);
+                        menu.findItem(R.id.action_video).setTitle(getResources().getString(R.string.action_audiovideoPDF));
+                        menu.findItem(R.id.action_show_comment).setVisible(!listAdapter.isCommentEnabled());
+                        menu.findItem(R.id.action_hide_comment).setVisible(listAdapter.isCommentEnabled());
+                        menu.findItem(R.id.action_restore).setVisible(true);
+                        menu.findItem(R.id.action_view).setVisible(false);
+                        menu.findItem(R.id.action_save).setVisible(true);
+                        menu.findItem(R.id.action_saveaspdf).setVisible(true);
+                        menu.findItem(R.id.action_import_export).setVisible(true);
+                        menu.findItem(R.id.action_new).setVisible(false);
+                    }
+                } else {
+                    menu.findItem(R.id.action_syllabus).setVisible(true);
+                    menu.findItem(R.id.action_show_comment).setVisible(!listAdapter.isCommentEnabled());
+                    menu.findItem(R.id.action_hide_comment).setVisible(listAdapter.isCommentEnabled());
+                    menu.findItem(R.id.action_add_figure).setVisible(false);
+                    menu.findItem(R.id.action_video).setVisible(false);
+                    menu.findItem(R.id.action_restore).setVisible(false);
+                    menu.findItem(R.id.action_save).setVisible(true);
+                    menu.findItem(R.id.action_saveaspdf).setVisible(true);
+                    menu.findItem(R.id.action_import_export).setVisible(false);
+                    menu.findItem(R.id.action_new).setVisible(false);
+                    if (Syllabus.getDanceId() == R.id.allDances) {
+                        menu.findItem(R.id.action_show_syllabus).setVisible(false);
+                    } else {
+                        menu.findItem(R.id.action_show_syllabus).setVisible(true);
+                    }
+                    menu.findItem(R.id.action_view).setVisible(false);
+                }
             }
         }
     }
@@ -321,15 +356,15 @@ public class ListFragment extends Fragment {
             }
             return true;
             case R.id.action_view:
-            {
-                Resources resource = getContext().getResources();
+            {Context context = getContext();
+                Resources resource = context.getResources();
                 Intent exportIntent = new Intent(Intent.ACTION_VIEW);
                 Uri fileURI;
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                     File path = new File(mExternalFilesDir, "");
                     File newFile = new File(path, dance_file+"onscreen");
                     if (!newFile.exists())  newFile = new File(path, dance_file);
-                    fileURI= getUriForFile(getContext(), "com.olklein.choreo.fileProvider", newFile);
+                    fileURI= getUriForFile(context, "com.olklein.choreo.fileProvider", newFile);
                     exportIntent.setDataAndType(fileURI,"text/plain");
                     exportIntent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_WRITE_URI_PERMISSION );
                     startActivity(Intent.createChooser(exportIntent, resource.getString(R.string.action_view)));
@@ -397,15 +432,16 @@ public class ListFragment extends Fragment {
                             startActivityForResult(si, IMPORT_REQUEST);
                         }
                         if (command == 1) {
-                            Resources resource = getContext().getResources();
+                            Resources resource = context.getResources();
                             Intent exportIntent = new Intent(Intent.ACTION_SEND);
 
                             Uri fileURI;
+
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                                 File path = new File(mExternalFilesDir, "");
                                 File newFile = new File(path, dance_file+"onscreen");
                                 if (!newFile.exists())  newFile = new File(path, dance_file);
-                                fileURI= getUriForFile(getContext(), "com.olklein.choreo.fileProvider", newFile);
+                                fileURI= getUriForFile(context, "com.olklein.choreo.fileProvider", newFile);
                             }else {
                                 String filePath = mExternalFilesDir+"/"+dance_file+"onscreen";
                                 File newFile = new File(filePath);
@@ -453,33 +489,13 @@ public class ListFragment extends Fragment {
                             try {
                                 saveDance(dance_file);
                                 deleteTemporaryFile(dance_file);
-                                mItemArray.clear();
-                                if (listAdapter != null) listAdapter.notifyDataSetChanged();
+                                updateFragmentList();
                                 loadDance(dance_file);
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
                             ChoreographerConstants.init(mExternalFilesDir);
-                            DanceCustomAdapter danceListAdapter = new DanceCustomAdapter(context,
-                                    R.layout.dance_custom_list,
-                                    ChoreographerConstants.DANCE_LIST_FILENAME,
-                                    mDrawer);
-                            ListView drawerList = (ListView) getActivity().findViewById(R.id.left_drawer);
-                            drawerList.setAdapter(danceListAdapter);
-                            int index = ChoreographerConstants.getIndex(dance_file);
-                            if (index != -1) {
-                                danceListAdapter.setClicked(index);
-                                ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
-                                if (actionBar != null) {
-                                    actionBar.setTitle(dance_file);
-                                    actionBar.setDisplayHomeAsUpEnabled(true);
-                                    actionBar.setHomeButtonEnabled(true);
-                                    DrawerLayout mDrawerLayout = (DrawerLayout)  getActivity().findViewById(R.id.drawer_layout);
-                                    mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
-                                }
-                                isSyllabus=false;
-                            }
-                            getActivity().supportInvalidateOptionsMenu();
+                            doRefreshMenus(context,mDrawer,dance_file,isMediaFolder);
                         }else {
                             File testFile = new File(mExternalFilesDir + "/" + name);
                             // name may just differ from the case point of view. So we check if the file exist
@@ -496,7 +512,7 @@ public class ListFragment extends Fragment {
                                             dance_file = input1.getText().toString();
                                             // Non case sensitive management
                                             try {
-                                                String filePath = mExternalFilesDir+ "/" + dance_file;
+                                                String filePath = mExternalFilesDir + "/" + dance_file;
                                                 File file = new File(filePath);
                                                 boolean deleted = file.delete();
                                                 Log.d(TAG, "Deleted=" + (deleted ? "true" : "false"));
@@ -512,34 +528,13 @@ public class ListFragment extends Fragment {
 
                                                 saveDance(dance_file);
                                                 deleteTemporaryFile(dance_file);
-                                                mItemArray.clear();
-                                                if (listAdapter != null) listAdapter.notifyDataSetChanged();
+                                                updateFragmentList();
                                                 loadDance(dance_file);
                                             } catch (IOException e) {
                                                 e.printStackTrace();
                                             }
                                             ChoreographerConstants.init(mExternalFilesDir);
-                                            DanceCustomAdapter danceListAdapter =
-                                                    new DanceCustomAdapter(getActivity(),
-                                                            R.layout.dance_custom_list,
-                                                            ChoreographerConstants.DANCE_LIST_FILENAME,
-                                                            mDrawer);
-                                            ListView drawerList = (ListView) getActivity().findViewById(R.id.left_drawer);
-                                            drawerList.setAdapter(danceListAdapter);
-                                            int index = ChoreographerConstants.getIndex(dance_file);
-                                            if (index != -1) {
-                                                danceListAdapter.setClicked(index);
-                                                ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
-                                                if (actionBar != null) {
-                                                    actionBar.setTitle(dance_file);
-                                                    actionBar.setDisplayHomeAsUpEnabled(true);
-                                                    actionBar.setHomeButtonEnabled(true);
-                                                    DrawerLayout mDrawerLayout = (DrawerLayout) getActivity().findViewById(R.id.drawer_layout);
-                                                    mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
-                                                }
-                                                isSyllabus = false;
-                                            }
-                                            getActivity().supportInvalidateOptionsMenu();
+                                            doRefreshMenus(getActivity(), mDrawer, dance_file, isMediaFolder);
                                         }
                                     }
                                 });
@@ -559,35 +554,13 @@ public class ListFragment extends Fragment {
                                     try {
                                         saveDance(dance_file);
                                         deleteTemporaryFile(dance_file);
-                                        mItemArray.clear();
-                                        if (listAdapter != null) listAdapter.notifyDataSetChanged();
+                                        updateFragmentList();
                                         loadDance(dance_file);
                                     } catch (IOException e) {
                                         e.printStackTrace();
                                     }
                                     ChoreographerConstants.init(mExternalFilesDir);
-                                    DanceCustomAdapter danceListAdapter =
-                                            new DanceCustomAdapter(context,
-                                                    R.layout.dance_custom_list,
-                                                    ChoreographerConstants.DANCE_LIST_FILENAME,
-                                                    mDrawer);
-                                    ListView drawerList = (ListView) getActivity().findViewById(R.id.left_drawer);
-                                    drawerList.setAdapter(danceListAdapter);
-                                    int index = ChoreographerConstants.getIndex(dance_file);
-                                    if (index != -1) {
-                                        danceListAdapter.setClicked(index);
-                                        ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
-                                        if (actionBar != null) {
-                                            actionBar.setTitle(dance_file);
-                                            actionBar.setDisplayHomeAsUpEnabled(true);
-                                            actionBar.setHomeButtonEnabled(true);
-                                            DrawerLayout mDrawerLayout = (DrawerLayout) getActivity().findViewById(R.id.drawer_layout);
-                                            mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
-                                        }
-                                        isSyllabus = false;
-                                    }
-
-                                    getActivity().supportInvalidateOptionsMenu();
+                                    doRefreshMenus(context,mDrawer,dance_file, isMediaFolder);
                                 } else {
                                     final android.app.AlertDialog.Builder alreadyExistDialog = new android.app.AlertDialog.Builder(context);
                                     String conflictName = getEquivalent(testFile);
@@ -619,35 +592,13 @@ public class ListFragment extends Fragment {
 
                                                     saveDance(dance_file);
                                                     deleteTemporaryFile(dance_file);
-                                                    mItemArray.clear();
-                                                    if (listAdapter != null)
-                                                        listAdapter.notifyDataSetChanged();
+                                                    updateFragmentList();
                                                     loadDance(dance_file);
                                                 } catch (IOException e) {
                                                     e.printStackTrace();
                                                 }
                                                 ChoreographerConstants.init(mExternalFilesDir);
-                                                DanceCustomAdapter danceListAdapter =
-                                                        new DanceCustomAdapter(context,
-                                                                R.layout.dance_custom_list,
-                                                                ChoreographerConstants.DANCE_LIST_FILENAME,
-                                                                mDrawer);
-                                                ListView drawerList = (ListView) getActivity().findViewById(R.id.left_drawer);
-                                                drawerList.setAdapter(danceListAdapter);
-                                                int index = ChoreographerConstants.getIndex(dance_file);
-                                                if (index != -1) {
-                                                    danceListAdapter.setClicked(index);
-                                                    ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
-                                                    if (actionBar != null) {
-                                                        actionBar.setTitle(dance_file);
-                                                        actionBar.setDisplayHomeAsUpEnabled(true);
-                                                        actionBar.setHomeButtonEnabled(true);
-                                                        DrawerLayout mDrawerLayout = (DrawerLayout) getActivity().findViewById(R.id.drawer_layout);
-                                                        mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
-                                                    }
-                                                    isSyllabus = false;
-                                                }
-                                                getActivity().supportInvalidateOptionsMenu();
+                                                doRefreshMenus(context,mDrawer,dance_file, isMediaFolder);
                                             }
                                         }
                                     });
@@ -727,8 +678,7 @@ public class ListFragment extends Fragment {
                     addFigure();
                     try {
                         saveDance(dance_file+"onscreen");
-                        mItemArray.clear();
-                        if (listAdapter != null) listAdapter.notifyDataSetChanged();
+                        updateFragmentList();
                         loadDance(dance_file+"onscreen");
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -757,11 +707,7 @@ public class ListFragment extends Fragment {
                             }
                         } catch (IOException e) {
                             e.printStackTrace();
-                            mItemArray.clear();
-                            if (listAdapter!= null) {
-                                listAdapter.notifyDataSetChanged();
-                                listAdapter.setLastPosition(-1);
-                            }
+                            updateFragmentList();
                         }
 
                     }
@@ -773,19 +719,19 @@ public class ListFragment extends Fragment {
             case R.id.action_show_comment:
                 listAdapter.setCommentEnabled(true);
                 listAdapter.notifyDataSetChanged();
-                getActivity().supportInvalidateOptionsMenu();
+                getActivity().invalidateOptionsMenu();
                 return true;
             case R.id.action_hide_comment:
                 listAdapter.setCommentEnabled(false);
                 listAdapter.notifyDataSetChanged();
-                getActivity().supportInvalidateOptionsMenu();
+                getActivity().invalidateOptionsMenu();
                 return true;
 
             case R.id.action_show_syllabus: {
                 final Context context = getContext();
                 dance_file= Syllabus.getName();
                 isSyllabus=true;
-                getActivity().supportInvalidateOptionsMenu();
+                getActivity().invalidateOptionsMenu();
 
                 DanceCustomAdapter danceListAdapter =
                         new DanceCustomAdapter(context, R.layout.dance_custom_list,
@@ -798,12 +744,7 @@ public class ListFragment extends Fragment {
                 if (actionBar != null) {
                     actionBar.setTitle(R.string.syllabus);
                 }
-                if (mItemArray!=null) mItemArray.clear();
-                sCreatedItems = 0;
-                if (listAdapter != null) {
-                    listAdapter.setLastPosition(-1);
-                    listAdapter.notifyDataSetChanged();
-                }
+                updateFragmentList();
                 Comparator<String[]> comparator = new Comparator<String[]>() {
                     @Override
                     public int compare(String s1[], String s2[]) {
@@ -839,7 +780,6 @@ public class ListFragment extends Fragment {
                         text1.setBackgroundResource(R.drawable.borderfilled);
                         return view;
                     }
-
                 };
 
                 for (String type :context.getResources().getStringArray(R.array.PassportType))
@@ -849,7 +789,7 @@ public class ListFragment extends Fragment {
 
                 alert.setAdapter(TypeArrayAdapter, new DialogInterface.OnClickListener() {
                     @Override
-                    public void onClick(DialogInterface dialog, int discipline) {
+                    public void onClick(DialogInterface dialog, final int discipline) {
                         final AlertDialog.Builder alert = new AlertDialog.Builder(context);
                         final int d= discipline;
                         alert.setIcon(R.mipmap.ic_launcher);
@@ -859,7 +799,8 @@ public class ListFragment extends Fragment {
                             }
                         });
                         alert.setTitle(R.string.action_show_passport_for);
-                        final int items ;if (d==0) {
+                        final int items ;
+                        if (d==0) {
                             items = R.array.PassportDanceS;
                         }else{
                             items = R.array.PassportDanceL;
@@ -877,129 +818,19 @@ public class ListFragment extends Fragment {
                             }
                         };
 
-                        for (String item :context.getResources().getStringArray(items))
+                        for (String cmd :context.getResources().getStringArray(items))
                         {
-                            DanceArrayAdapter.add(item);
+                            DanceArrayAdapter.add(cmd);
                         }
-                        alert.setAdapter(DanceArrayAdapter, new DialogInterface.OnClickListener() {
-
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int id) {
-                                        final AlertDialog.Builder alert = new AlertDialog.Builder(context);
-                                        final int danceID= id;
-                                        alert.setIcon(R.mipmap.ic_launcher);
-
-                                        alert.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-                                            public void onClick(DialogInterface dialog, int whichButton) {
-                                                // Canceled.
-                                            }
-                                        });
-                                        int items = R.array.PassportColor;
-                                        int itemColors = R.array.PassportItemColors;
-                                        int itemBoxes =  R.array.PassportItemBoxes;
-
-                                        if (d==0){
-                                            alert.setTitle(R.string.action_show_passport_level);
-                                            if (danceID ==2) {
-                                                items = R.array.PassportColorFromPurple;
-                                                itemColors = R.array.PassportItemColorsFromPurple;
-                                                itemBoxes =  R.array.PassportItemBoxesFromPurple;
-                                            }
-                                            if (danceID ==3){
-                                                items = R.array.PassportColorFromGreen;
-                                                itemColors = R.array.PassportItemColorsFromGreen;
-                                                itemBoxes =  R.array.PassportItemBoxesFromGreen;
-                                            }
-                                            if (danceID ==4){
-                                                items = R.array.PassportColorFromOrange;
-                                                itemColors = R.array.PassportItemColorsFromOrange;
-                                                itemBoxes =  R.array.PassportItemBoxesFromOrange;
-                                            }
-                                        }
-                                        if (d==1){
-                                            alert.setTitle(R.string.action_show_passport_level);
-                                            if (danceID ==0){
-                                                items = R.array.PassportColorFromGreen;
-                                                itemColors = R.array.PassportItemColorsFromGreen;
-                                                itemBoxes =  R.array.PassportItemBoxesFromGreen;
-                                            }
-                                            if (danceID ==2){
-                                                items = R.array.PassportColorFromOrange;                                                    itemColors = R.array.PassportItemColorsFromPurple;
-                                                itemColors = R.array.PassportItemColorsFromOrange;
-                                                itemBoxes =  R.array.PassportItemBoxesFromOrange;
-                                            }
-                                            if (danceID ==3){
-                                                items = R.array.PassportColorFromPurple;
-                                                itemColors = R.array.PassportItemColorsFromPurple;
-                                                itemBoxes =  R.array.PassportItemBoxesFromPurple;
-                                            }
-                                        }
-                                        final int colors = itemColors;
-                                        final int boxes = itemBoxes;
-                                        final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String> (context, R.layout.passportcoloritem ) {
-                                            @Override
-                                            public View getView(int position, View convertView, ViewGroup parent) {
-                                                View view = super.getView(position, convertView, parent);
-                                                TextView text1 = (TextView) view.findViewById(android.R.id.text1);
-                                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-                                                    text1.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
-                                                }
-                                                text1.setBackgroundResource(R.drawable.borderfilled);
-                                                String colorStr= context.getResources().getStringArray(colors)[position];
-
-                                                text1.setTextColor(Color.parseColor(colorStr));
-                                                {
-                                                    int resID = context.getResources().getIntArray(boxes)[position];
-
-                                                    switch (resID){
-                                                        case 1:
-                                                            text1.setCompoundDrawablesWithIntrinsicBounds(R.drawable.yellowbox,R.drawable.nobox,R.drawable.nobox,R.drawable.nobox);
-                                                            break;
-                                                        case 2:
-                                                            text1.setCompoundDrawablesWithIntrinsicBounds(R.drawable.orangebox,R.drawable.nobox,R.drawable.nobox,R.drawable.nobox);
-
-                                                            break;
-                                                        case 3:
-                                                            text1.setCompoundDrawablesWithIntrinsicBounds(R.drawable.greenbox,R.drawable.nobox,R.drawable.nobox,R.drawable.nobox);
-                                                            break;
-                                                        case 4:
-                                                            text1.setCompoundDrawablesWithIntrinsicBounds(R.drawable.purplebox,R.drawable.nobox,R.drawable.nobox,R.drawable.nobox);
-                                                            break;
-                                                        case 5:
-                                                            text1.setCompoundDrawablesWithIntrinsicBounds(R.drawable.bluebox,R.drawable.nobox,R.drawable.nobox,R.drawable.nobox);
-                                                            break;
-                                                        case 6:
-                                                            text1.setCompoundDrawablesWithIntrinsicBounds(R.drawable.redbox,R.drawable.nobox,R.drawable.nobox,R.drawable.nobox);
-                                                            break;
-                                                    }
-                                                }
-                                                return view;
-                                            }
-                                        };
-
-                                        for (String item :context.getResources().getStringArray(items))
-                                        {
-                                            arrayAdapter.add(item);
-                                        }
-                                        alert.setAdapter(arrayAdapter, new DialogInterface.OnClickListener() {
-                                                    @Override
-                                                    public void onClick(DialogInterface dialog, int which) {
-                                                        show_passport(context, d,danceID, which);
-                                                    }
-                                                }
-                                        );
-
-                                        final AlertDialog dial = alert.create();
-                                        dial.show();
-
-                                    }
-                                }
-
-                        );
-
+                        DialogInterface.OnClickListener passportMenuListener = new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                passportDialogOnClickListener(which,context,discipline);
+                            }
+                        };
+                        alert.setAdapter(DanceArrayAdapter, passportMenuListener );
                         final AlertDialog dial = alert.create();
                         dial.show();
-
                     }
                 });
                 final AlertDialog dialog = alert.create();
@@ -1008,50 +839,106 @@ public class ListFragment extends Fragment {
                 return true;
             }
             case R.id.action_video: {
-                final Context context = getContext();
-                final AlertDialog.Builder  alert = new AlertDialog.Builder(context);
-                alert.setIcon(R.mipmap.ic_launcher);
-                alert.setTitle(R.string.action_audiovideo);
-                alert.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int whichButton) {
-                        // Canceled.
-                    }
-                });
+                if (isMediaFolder) {
+                    final Context context = getContext();
 
-                final ArrayAdapter<String> VideoCommandsArrayAdapter = new ArrayAdapter<String> (context, android.R.layout.simple_list_item_1 ) {
-                    @Override
-                    public View getView(int position, View convertView, ViewGroup parent) {
-                        View view = super.getView(position, convertView, parent);
-                        TextView text1 = (TextView) view.findViewById(android.R.id.text1);
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-                            text1.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+                    if (!isMediaFolderEmpty(context)) {
+                        clean_dialogOpen(context);
+                        return true;//
+                    }
+                    final AlertDialog.Builder alert = new AlertDialog.Builder(context);
+                    alert.setTitle(R.string.action_Manage_media_content);
+                    alert.setIcon(R.mipmap.ic_launcher);
+                    alert.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int whichButton) {
+                            // Canceled.
                         }
-                        text1.setBackgroundResource(R.drawable.borderfilled);
-                        return view;
+                    });
+                    final int commands;
+                    commands = R.array.MediaManagementActions;
+
+                    final ArrayAdapter<String> MediaCommandArrayAdapter = new ArrayAdapter<String>(context, android.R.layout.simple_list_item_1) {
+                        @Override
+                        public View getView(int position, View convertView, ViewGroup parent) {
+                            View view = super.getView(position, convertView, parent);
+                            TextView text1 = (TextView) view.findViewById(android.R.id.text1);
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+                                text1.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+                            }
+                            text1.setBackgroundResource(R.drawable.borderfilled);
+                            return view;
+                        }
+                    };
+
+                    for (String command : context.getResources().getStringArray(commands)) {
+                        MediaCommandArrayAdapter.add(command);
                     }
-                };
+                    DialogInterface.OnClickListener passportMenuListener = new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            if (which == 0) {
+                                clean_dialogOpen(context);
+                            }
+                            if (which == 1) {
+                                show_mediaContent(context);
+                            }
+                        }
+                    };
+                    alert.setAdapter(MediaCommandArrayAdapter, passportMenuListener);
 
-                for (String type :context.getResources().getStringArray(R.array.VideoCommands))
-                {
-                    VideoCommandsArrayAdapter.add(type);
-                }
 
-                alert.setAdapter(VideoCommandsArrayAdapter, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int command) {
-                        {
+                    final AlertDialog dial = alert.create();
+                    dial.show();
+                    return true;
+                }else{// !isMediafolder
+                    final Context context = getContext();
+                    final AlertDialog.Builder alert = new AlertDialog.Builder(context);
+                    alert.setIcon(R.mipmap.ic_launcher);
+                    alert.setTitle(R.string.action_audiovideoPDF);
+                    alert.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int whichButton) {
+                            // Canceled.
+                        }
+                    });
+
+                    final ArrayAdapter<String> VideoCommandsArrayAdapter = new ArrayAdapter<String>(context, android.R.layout.simple_list_item_1) {
+                        @Override
+                        public View getView(int position, View convertView, ViewGroup parent) {
+                            View view = super.getView(position, convertView, parent);
+                            TextView text1 = (TextView) view.findViewById(android.R.id.text1);
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+                                text1.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+                            }
+                            text1.setBackgroundResource(R.drawable.borderfilled);
+                            return view;
+                        }
+                    };
+
+                    for (String type : context.getResources().getStringArray(R.array.VideoCommands)) {
+                        VideoCommandsArrayAdapter.add(type);
+                    }
+
+                    if (!isMediaFolderEmpty(context)) {
+                        for (String type : context.getResources().getStringArray(R.array.VideoCommands2)) {
+                            VideoCommandsArrayAdapter.add(type);
+                        }
+                    }
+
+                    alert.setAdapter(VideoCommandsArrayAdapter, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int command) {
+
                             if (command == 0 || command == 1) {
-
                                 Intent captureIntent;
-                                String extension ;
+                                String extension;
                                 if (command == 0) {
                                     captureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                                    extension="jpeg";
-                                }else {
+                                    extension = "jpeg";
+                                } else {
                                     captureIntent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
-                                    extension="mpeg";
+                                    extension = "mpeg";
                                 }
-                                if (captureIntent .resolveActivity(context.getPackageManager()) != null) {
+                                if (captureIntent.resolveActivity(context.getPackageManager()) != null) {
                                     File mediaFile = null;
                                     try {
                                         mediaFile = createMediaFile(extension);
@@ -1067,7 +954,7 @@ public class ListFragment extends Fragment {
                                                     "com.olklein.choreo.fileProvider",
                                                     mediaFile);
                                         } else {
-                                            contentURI =Uri.fromFile(mediaFile);
+                                            contentURI = Uri.fromFile(mediaFile);
                                         }
 
                                         captureIntent.putExtra(MediaStore.EXTRA_OUTPUT, contentURI);
@@ -1076,17 +963,14 @@ public class ListFragment extends Fragment {
                                 }
                             }
                             if (command == 2) {
-                                try{
+                                try {
                                     Intent si = new Intent(Intent.ACTION_GET_CONTENT);
-                                    String [] types ={"video/*","audio/*","application/pdf","image/*"};
-//                                    si.setType("audio/*");
-//                                    si.setType("application/pdf");
-//                                    si.setType("image/*");
-                                    //si.setType("*/*");
                                     si.setType("*/*");
                                     si.addCategory(Intent.CATEGORY_OPENABLE);
-                                    si.putExtra(Intent.EXTRA_MIME_TYPES,types);
-
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                                        String[] types = {"video/*", "audio/*", "application/pdf", "image/*"};
+                                        si.putExtra(Intent.EXTRA_MIME_TYPES, types);
+                                    }
 
                                     startActivityForResult(si, VIDEO_IMPORT_REQUEST);
                                 } catch (ActivityNotFoundException anfe) {
@@ -1096,34 +980,54 @@ public class ListFragment extends Fragment {
                             if (command == 3) {
                                 final AlertDialog.Builder alert = new AlertDialog.Builder(context);
                                 alert.setIcon(R.mipmap.ic_launcher);
-                                alert.setTitle(R.string.cleaning);
                                 alert.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
                                     public void onClick(DialogInterface dialog, int whichButton) {
                                         // Canceled.
                                     }
                                 });
+                                alert.setTitle(R.string.action_Manage_media_content);
+                                final int items;
+                                items = R.array.MediaManagementActions;
 
-                                alert.setPositiveButton(R.string.removeVideo, new DialogInterface.OnClickListener() {
-                                    public void onClick(DialogInterface dialog, int whichButton) {
-                                        BkgCheckUnused cleaner = new BkgCheckUnused();
-                                        cleaner.setup(context);
+                                final ArrayAdapter<String> MediaCommandArrayAdapter = new ArrayAdapter<String>(context, android.R.layout.simple_list_item_1) {
+                                    @Override
+                                    public View getView(int position, View convertView, ViewGroup parent) {
+                                        View view = super.getView(position, convertView, parent);
+                                        TextView text1 = (TextView) view.findViewById(android.R.id.text1);
+                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+                                            text1.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+                                        }
+                                        text1.setBackgroundResource(R.drawable.borderfilled);
+                                        return view;
                                     }
-                                });
+                                };
 
-                                final AlertDialog subDialog = alert.create();
+                                for (String item : context.getResources().getStringArray(items)) {
+                                    MediaCommandArrayAdapter.add(item);
+                                }
+                                DialogInterface.OnClickListener passportMenuListener = new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        if (which == 0) {
+                                            clean_dialogOpen(context);
+                                        }
+                                        if (which == 1) {
+                                            show_mediaContent(context);
+                                        }
+                                    }
+                                };
+                                alert.setAdapter(MediaCommandArrayAdapter, passportMenuListener);
 
-                                subDialog.show();
-
-
+                                final AlertDialog dial = alert.create();
+                                dial.show();
                             }
                         }
-                    }
-                });
+                    });
 
-                final AlertDialog dialog = alert.create();
-                dialog.show();
-
-                return true;
+                    final AlertDialog dialog = alert.create();
+                    dialog.show();
+                    return true;
+                }
             }
             case R.id.allDances:
             case R.id.slowWaltz:
@@ -1142,13 +1046,15 @@ public class ListFragment extends Fragment {
                 else item.setChecked(true);
                 if (dance_file != null && dance_file.equals("")){
                     isSyllabus=true;
+                    isMediaFolder=false;
                 }
                 setDance(context,item.getItemId());
-                getActivity().supportInvalidateOptionsMenu();
+                getActivity().invalidateOptionsMenu();
                 if (isSyllabus) {
                     dance_file= Syllabus.getName();
                     isSyllabus=true;
-                    getActivity().supportInvalidateOptionsMenu();
+                    isMediaFolder=false;
+                    getActivity().invalidateOptionsMenu();
 
                     DanceCustomAdapter danceListAdapter =
                             new DanceCustomAdapter(context, R.layout.dance_custom_list,
@@ -1161,12 +1067,7 @@ public class ListFragment extends Fragment {
                     if (actionBar != null) {
                         actionBar.setTitle(R.string.syllabus);
                     }
-                    if (mItemArray!=null) mItemArray.clear();
-                    sCreatedItems = 0;
-                    if (listAdapter != null) {
-                        listAdapter.setLastPosition(-1);
-                        listAdapter.notifyDataSetChanged();
-                    }
+                    updateFragmentList();
                     Comparator<String[]> comparator = new Comparator<String[]>() {
                         @Override
                         public int compare(String s1[], String s2[]) {
@@ -1184,37 +1085,13 @@ public class ListFragment extends Fragment {
         return super.onOptionsItemSelected(item);
     }
 
+
     private void show_passport(final Context context, int discipline, int dance_id, int color) {
         com.olklein.choreo.Passport.setDance(context,discipline,dance_id,color);
         dance_file = ChoreographerConstants.addNew(context, Passport.getName());
-        DanceCustomAdapter danceListAdapter =
-                new DanceCustomAdapter(context, R.layout.dance_custom_list,
-                        ChoreographerConstants.DANCE_LIST_FILENAME,mDrawer);
-        ListView drawerList = (ListView) getActivity().findViewById(R.id.left_drawer);
-        drawerList.setAdapter(danceListAdapter);
+        doRefreshMenus(context,mDrawer,dance_file,false);
 
-        int index = ChoreographerConstants.getIndex(dance_file);
-        if (index != -1) {
-            danceListAdapter.setClicked(index);
-            ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
-            if (actionBar != null) {
-                actionBar.setTitle(dance_file);
-                actionBar.setDisplayHomeAsUpEnabled(true);
-                actionBar.setHomeButtonEnabled(true);
-                DrawerLayout mDrawerLayout = (DrawerLayout)  getActivity().findViewById(R.id.drawer_layout);
-                mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
-            }
-            isSyllabus=false;
-            getActivity().supportInvalidateOptionsMenu();
-        }
-
-        if (mItemArray!=null) mItemArray.clear();
-        sCreatedItems = 0;
-
-        if (listAdapter != null) {
-            listAdapter.setLastPosition(-1);
-            listAdapter.notifyDataSetChanged();
-        }
+        updateFragmentList();
 
         for (String[] figure : Passport.figuresWithTempo){
             addFigure(figure);
@@ -1256,8 +1133,7 @@ public class ListFragment extends Fragment {
         }
         try {
             saveDance(dance_file+"onscreen");
-            mItemArray.clear();
-            if (listAdapter != null) listAdapter.notifyDataSetChanged();
+            updateFragmentList();
             loadDance(dance_file+"onscreen");
         } catch (IOException e) {
             e.printStackTrace();
@@ -1330,7 +1206,11 @@ public class ListFragment extends Fragment {
     }
 
     private void saveAsPDFDance(String file) {
-        String downloadPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath();
+        String downloadPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath()+"/Choreo";
+        File outDir=new File(downloadPath);
+        if(!outDir.exists()){
+            outDir.mkdirs();
+        }
         String filePath = downloadPath+"/"+file+".pdf";
         saveDanceAsPDFFromPath(getContext(), file, filePath);
     }
@@ -1348,20 +1228,34 @@ public class ListFragment extends Fragment {
         if (out != null) {
             PDFCreator creator = new PDFCreator();
             Resources resources = context.getResources();
-            creator.createPdf(context, filePath, headerTitle,listAdapter.isCommentEnabled(),resources.getDrawable(R.drawable.choreologo),mItemArray,out);
+            creator.createPdf(context, filePath, headerTitle,listAdapter.isCommentEnabled(),
+                    resources.getDrawable(R.drawable.choreologo),mItemArray,out);
 
             NotificationManager mNotifyManager;
-            NotificationCompat.Builder mBuilder;
+            Notification.Builder mBuilder;
             mNotifyManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 
-
-            mBuilder = new NotificationCompat.Builder(context);
+            NotificationUtils notification = new NotificationUtils(context);
+            notification.createChannels();
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                mBuilder = new Notification.Builder(context,NotificationUtils.CHOREO_CHANNEL_ID);
+            }else{
+                mBuilder = new Notification.Builder(context);
+            }
             int color = resources.getColor(android.R.color.holo_blue_light);
-            mBuilder.setContentTitle(resources.getString(R.string.app_name))
-                    .setContentText(resources.getString(R.string.pdf_file_uploading,dance_file))
-                    .setSmallIcon(android.R.drawable.stat_sys_download)
-                    .setAutoCancel(false)
-                    .setColor(color);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                mBuilder.setContentTitle(resources.getString(R.string.app_name))
+                        .setContentText(resources.getString(R.string.pdf_file_uploading,dance_file))
+                        .setSmallIcon(android.R.drawable.stat_sys_download)
+                        .setAutoCancel(false)
+                        .setColor(color);
+            }else{
+                mBuilder.setContentTitle(resources.getString(R.string.app_name))
+                        .setContentText(resources.getString(R.string.pdf_file_uploading,dance_file))
+                        .setSmallIcon(android.R.drawable.stat_sys_download)
+                        .setAutoCancel(false);
+            }
+            //if (mNotifyManager!=null) mNotifyManager.notify(1234, mBuilder.build());
             if (mNotifyManager!=null) mNotifyManager.notify(1234, mBuilder.build());
         }
     }
@@ -1400,6 +1294,7 @@ public class ListFragment extends Fragment {
         InputStream inputStream = new FileInputStream(filePath);
         final Scanner reader = new Scanner(inputStream, "ISO-8859-1");
         mItemArray.clear();
+        isMediaFolder=false;
         long index=0;
         try {
             String line;
@@ -1437,6 +1332,15 @@ public class ListFragment extends Fragment {
         if (testFile.exists()){
             loadDanceFile(filePath);
         }
+        if(!isMediaFolder) {
+            try {
+                saveDance(dance_file + "onscreen");
+                updateFragmentList();
+                loadDance(dance_file);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
 
@@ -1456,10 +1360,11 @@ public class ListFragment extends Fragment {
     @Override
     public void onCreateContextMenu(ContextMenu menu, View v,
                                     ContextMenu.ContextMenuInfo menuInfo) {
-        super.onCreateContextMenu(menu, v, menuInfo);
-        MenuInflater inflater = getActivity().getMenuInflater();
-        inflater.inflate(R.menu.figure_item_menu, menu);
-
+        if (!isMediaFolder) {
+            super.onCreateContextMenu(menu, v, menuInfo);
+            MenuInflater inflater = getActivity().getMenuInflater();
+            inflater.inflate(R.menu.figure_item_menu, menu);
+        }
     }
     @Override
     public boolean onContextItemSelected(MenuItem item) {
@@ -1471,8 +1376,7 @@ public class ListFragment extends Fragment {
                 //sav
                 try {
                     saveDance(dance_file+"onscreen");
-                    mItemArray.clear();
-                    if (listAdapter!= null) listAdapter.notifyDataSetChanged();
+                    updateFragmentList();
                     loadDance(dance_file+"onscreen");
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -1483,7 +1387,7 @@ public class ListFragment extends Fragment {
         }
     }
 
-    private void updateFragmentList(){
+    private static void updateFragmentList(){
         if (mItemArray!=null) mItemArray.clear();
         sCreatedItems = 0;
         if (listAdapter != null) {
@@ -1520,32 +1424,12 @@ public class ListFragment extends Fragment {
 
         alert.setPositiveButton(R.string.OK, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int whichButton) {
-                ChoreographerConstants.init(mExternalFilesDir);
+
                 dance_file = input1.getText().toString();
                 if (dance_file.replaceAll(" ","").equals(""))return;
+                ChoreographerConstants.init(mExternalFilesDir);
                 dance_file = ChoreographerConstants.addNew(context, dance_file);
-                DanceCustomAdapter danceListAdapter =
-                        new DanceCustomAdapter(context, R.layout.dance_custom_list,
-                                ChoreographerConstants.DANCE_LIST_FILENAME,
-                                mDrawer);
-                ListView drawerList = (ListView) getActivity().findViewById(R.id.left_drawer);
-                drawerList.setAdapter(danceListAdapter);
-
-                int index = ChoreographerConstants.getIndex(dance_file);
-                if (index != -1) {
-                    danceListAdapter.setClicked(index);
-                    ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
-                    if (actionBar != null) {
-                        actionBar.setTitle(dance_file);
-                        actionBar.setDisplayHomeAsUpEnabled(true);
-                        actionBar.setHomeButtonEnabled(true);
-                        DrawerLayout mDrawerLayout = (DrawerLayout)  getActivity().findViewById(R.id.drawer_layout);
-                        mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
-                    }
-                    isSyllabus=false;
-                    getActivity().supportInvalidateOptionsMenu();
-
-                }
+                doRefreshMenus(context,mDrawer,dance_file,false);
                 updateFragmentList();
 
                 try {
@@ -1622,10 +1506,14 @@ public class ListFragment extends Fragment {
                     String extension = getExtension(uri);
 
                     int lastDotIndex =displayName.lastIndexOf('.');
+                    String shortDisplayName;
                     if (lastDotIndex<0 || lastDotIndex<displayName.length()-5){
                         displayName=displayName+"."+extension;
                         lastDotIndex =displayName.lastIndexOf('.');
                     }
+                    shortDisplayName = displayName.substring(0, lastDotIndex);
+                    shortDisplayName = cleanFileName(shortDisplayName);
+
                     if (lastDotIndex > 1)
                     {
                         displayName =
@@ -1644,8 +1532,8 @@ public class ListFragment extends Fragment {
                         }
                         Context ctxt = getActivity().getBaseContext();
 
-                        fileName = fileName.replace("?","");
-                        fileName = fileName.replace("%","");
+                        fileName = fileName.replaceAll("\\?","");
+                        fileName = fileName.replaceAll("%","");
 
                         File test = new File(ctxt.getExternalFilesDir(Environment.DIRECTORY_MOVIES) + "/" + fileName);
 
@@ -1655,7 +1543,22 @@ public class ListFragment extends Fragment {
                             dance_file = ChoreographerConstants.addNew(getActivity().getBaseContext(), fileName);
                             importChoreoFile(ctxt, uri, fileName);
                         }else {
-                            importMediaFile(ctxt, uri, fileName);
+                            if (dance_file.equals("")) {
+                                dance_file = ChoreographerConstants.addNew(getActivity().getBaseContext(), shortDisplayName);
+                                doRefreshMenus(getActivity().getBaseContext(),mDrawer,dance_file,false);
+                                updateFragmentList();
+
+                                try {
+                                    saveDance(dance_file);
+                                    saveDance(dance_file + "onscreen");
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                                ////
+                                importMediaFile(ctxt, uri, fileName);
+                            }else{
+                                importMediaFile(ctxt, uri, fileName);
+                            }
                         }
                     }
                 }
@@ -1719,14 +1622,20 @@ public class ListFragment extends Fragment {
 
             try {
                 saveDance(dance_file + "onscreen");
-                mItemArray.clear();
-                if (listAdapter != null) listAdapter.notifyDataSetChanged();
+                updateFragmentList();
                 loadDance(dance_file + "onscreen");
-
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
+    }
+
+    private String cleanFileName(String shortDisplayName) {
+        shortDisplayName = shortDisplayName.replaceAll("%","");
+        shortDisplayName = shortDisplayName.replaceAll("\\[","");
+        shortDisplayName = shortDisplayName.replaceAll("\\]","");
+        shortDisplayName = shortDisplayName.replaceAll("\\?","");
+        return shortDisplayName;
     }
 
     private boolean isExtensionSupported(String extension) {
@@ -1815,35 +1724,13 @@ public class ListFragment extends Fragment {
             return;
         }
         try {
-            mItemArray.clear();
-            if (listAdapter != null) listAdapter.notifyDataSetChanged();
+            updateFragmentList();
             loadDance(dance_file);
         } catch (IOException e) {
             e.printStackTrace();
         }
         ChoreographerConstants.init(mExternalFilesDir);
-        DanceCustomAdapter danceListAdapter =
-                new DanceCustomAdapter(getContext(),
-                        R.layout.dance_custom_list,
-                        ChoreographerConstants.DANCE_LIST_FILENAME,mDrawer);
-
-        ListView drawerList = (ListView) getActivity().findViewById(R.id.left_drawer);
-
-        drawerList.setAdapter(danceListAdapter);
-        int index = ChoreographerConstants.getIndex(dance_file);
-        if (index != -1) {
-            danceListAdapter.setClicked(index);
-            ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
-            if (actionBar != null) {
-                actionBar.setTitle(dance_file);
-                actionBar.setDisplayHomeAsUpEnabled(true);
-                actionBar.setHomeButtonEnabled(true);
-                DrawerLayout mDrawerLayout = (DrawerLayout) getActivity().findViewById(R.id.drawer_layout);
-                mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
-            }
-        }
-        getActivity().supportInvalidateOptionsMenu();
-
+        doRefreshMenus(getContext(),mDrawer,dance_file,isMediaFolder);
     }
 
     private void importMediaFile(Context ctxt, Uri uri, String fileName) {
@@ -1867,8 +1754,7 @@ public class ListFragment extends Fragment {
 
             try {
                 saveDance(dance_file + "onscreen");
-                mItemArray.clear();
-                if (listAdapter != null) listAdapter.notifyDataSetChanged();
+                updateFragmentList();
                 loadDance(dance_file + "onscreen");
 
             } catch (IOException e) {
@@ -1974,8 +1860,7 @@ public class ListFragment extends Fragment {
                 try {
                     String filePath =mExternalFilesDir+"/"+dance_file + "onscreen";
                     saveDanceFromPath(filePath);
-                    mItemArray.clear();
-                    if (listAdapter != null) listAdapter.notifyDataSetChanged();
+                    updateFragmentList();
                     loadDanceFromPath(filePath);
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -1989,9 +1874,8 @@ public class ListFragment extends Fragment {
             }
         });
 
-        alert.setNeutralButton(R.string.delete, new DialogInterface.OnClickListener() {
+        alert.setNeutralButton(R.string.remove, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int whichButton) {
-                // Delete
                 mItemArray.remove(pos);
                 if (mItemArray.size()==pos) listAdapter.setLastPosition(pos-1);
                 listAdapter.notifyDataSetChanged();
@@ -1999,8 +1883,7 @@ public class ListFragment extends Fragment {
                 try {
                     String filePath =mExternalFilesDir+"/"+dance_file + "onscreen";
                     saveDanceFromPath(filePath);
-                    mItemArray.clear();
-                    if (listAdapter != null) listAdapter.notifyDataSetChanged();
+                    updateFragmentList();
                     loadDanceFromPath(filePath);
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -2008,11 +1891,6 @@ public class ListFragment extends Fragment {
             }
         });
         alert.show();
-    }
-
-    private static boolean isUriValid(Uri contentUri){
-        return (new File(contentUri.getPath())).exists() && (new File(contentUri.getPath())).canRead();
-
     }
 
     public static String isMimeTypeValid(Uri contentUri){
@@ -2023,14 +1901,6 @@ public class ListFragment extends Fragment {
         if ((new File(contentUri.getPath())).exists() && (new File(contentUri.getPath())).canRead()) return mimeType ;
         return null;
     }
-
-//    public static boolean isMimeTypeValid(Uri contentUri){
-//        String mimeType = getMimeType(contentUri);
-//        if (mimeType == null) return false;
-//        if (!mimeType.startsWith("video") && !mimeType.startsWith("audio")
-//                && !mimeType.startsWith("image") && !mimeType.startsWith("application/pdf")) return false;
-//        return (new File(contentUri.getPath())).exists() && (new File(contentUri.getPath())).canRead() ;
-//    }
 
     public static boolean isMimeTypeSupported(Uri contentUri){
         String mimeType = getMimeType(contentUri);
@@ -2076,8 +1946,7 @@ public class ListFragment extends Fragment {
                 try {
                     String filePath =mExternalFilesDir+"/"+dance_file + "onscreen";
                     saveDanceFromPath(filePath);
-                    mItemArray.clear();
-                    if (listAdapter != null) listAdapter.notifyDataSetChanged();
+                    updateFragmentList();
                     loadDanceFromPath(filePath);
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -2094,15 +1963,140 @@ public class ListFragment extends Fragment {
         alert.show();
     }
 
-    public static void openItemVideoDialog(final View view, final int pos, final Uri videoURI) {
+    public static void openMediaContentItemDialog(final View view, final int pos, final Uri videoURI) {
         final Context context = view.getContext();
         final AlertDialog.Builder alert = new AlertDialog.Builder(context);
         alert.setIcon(R.mipmap.ic_launcher);
-        alert.setTitle(R.string.action_video_delete_or_play);
+
+        final String mimeType = isMimeTypeValid(videoURI);
+
+        String type="*/*";
+        int buttonID=R.string.open;
+        alert.setTitle(R.string.MultimediaContent);
+
+        if (mimeType!=null) {
+            if (mimeType.startsWith("video")){
+                type="video/*";
+                buttonID=R.string.playVideo;
+                alert.setTitle(R.string.video_file);
+            }
+            if (mimeType.startsWith("audio")){
+                type="audio/*";
+                buttonID= R.string.playAudio;
+                alert.setTitle(R.string.audio_file);
+            }
+            if (mimeType.startsWith("image")) {
+                type="image/*";
+                buttonID= R.string.open;
+                alert.setTitle(R.string.image_file);
+            }
+            if (mimeType.startsWith("application/pdf")) {
+                type="application/pdf";
+                buttonID= R.string.open;
+                alert.setTitle(R.string.pdf_file);
+            }
+
+            final String finalType = type;
+            alert.setPositiveButton(buttonID, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+
+                    try {
+                        Intent intent = new Intent();
+                        intent.setAction(Intent.ACTION_VIEW);
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                            Uri contentUri = getUriForFile(context, "com.olklein.choreo.fileProvider", new File(videoURI.getPath()));
+                            intent.setDataAndType(contentUri, finalType);
+                            intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                            context.startActivity(Intent.createChooser(intent, mResources.getString(R.string.action_open_file)));
+                        } else {
+                            intent.setDataAndType(Uri.fromFile(new File(videoURI.getPath())), finalType);
+                            context.startActivity(Intent.createChooser(intent, mResources.getString(R.string.action_open_file)));
+                        }
+                    } catch (ActivityNotFoundException anfe) {
+                        Toast.makeText(context, mResources.getString(R.string.action_no_apps), Toast.LENGTH_LONG).show();
+                    }
+                }
+            });
+
+            alert.setNegativeButton(R.string.details, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    // Backup
+                    File contentFile = new File(videoURI.getPath());
+                    Resources mResources = context.getResources();
+                    int color = mResources.getColor(android.R.color.holo_blue_light);
+                    File home = new File(mExternalFilesDir, "");
+                    showUsage(context,home,contentFile);
+                }
+            });
+
+        } else {
+            alert.setTitle(R.string.action_lostfile_delete);
+            alert.setPositiveButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                }
+            });
+        }
+
+        alert.setNeutralButton(R.string.export, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                // Backup
+                File contentFile = new File(videoURI.getPath());
+                String downloadPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath()+"/Choreo";
+                File outDir=new File(downloadPath);
+                if(!outDir.exists()){
+                    outDir.mkdirs();
+                }
+                String filePath = downloadPath+"/"+contentFile.getName();
+                File dest = new File(filePath);
+
+                BkgMediaContentBackup backup = new BkgMediaContentBackup();
+                NotificationManager mNotifyManager;
+                Notification.Builder mBuilder;
+                mNotifyManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+
+
+                NotificationUtils notification = new NotificationUtils(context);
+                notification.createChannels();
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    mBuilder = new Notification.Builder(context,NotificationUtils.CHOREO_CHANNEL_ID);
+                }else{
+                    mBuilder = new Notification.Builder(context);
+                }
+                Resources mResources = context.getResources();
+                int color = mResources.getColor(android.R.color.holo_blue_light);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    mBuilder.setContentTitle(mResources.getString(R.string.app_name))
+                            .setContentText(mResources.getString(R.string.backupongoing,contentFile.getName()))
+                            .setSmallIcon(android.R.drawable.stat_sys_download)
+                            .setAutoCancel(false)
+                            .setColor(color);
+                }else{
+                    mBuilder.setContentTitle(mResources.getString(R.string.app_name))
+                            .setContentText(mResources.getString(R.string.backupongoing,contentFile.getName()))
+                            .setSmallIcon(android.R.drawable.stat_sys_download)
+                            .setAutoCancel(false);
+                }
+                if (mNotifyManager!=null) mNotifyManager.notify(1334, mBuilder.build());
+
+                backup.createCopy(context, Uri.fromFile(new File(videoURI.getPath())),dest,contentFile.getName());
+            }
+        });
+
+        final AlertDialog dialog = alert.create();
+        dialog.show();
+    }
+
+    public static void openItemVideoDialog(final View view, final int pos, final Uri videoURI) {
+        if (isMediaFolder) {
+            openMediaContentItemDialog(view, pos, videoURI);
+            return;
+        }
+        final Context context = view.getContext();
+        final AlertDialog.Builder alert = new AlertDialog.Builder(context);
+        alert.setIcon(R.mipmap.ic_launcher);
 
         final String mimeType = isMimeTypeValid(videoURI);
         if (mimeType!=null) {
-
             alert.setNegativeButton(R.string.Editer, new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {
                     // Edit
@@ -2110,38 +2104,42 @@ public class ListFragment extends Fragment {
                 }
             });
 
-            int buttonID=R.string.playVideo;
+            String type="*/*";
+            alert.setTitle(R.string.MultimediaContent);
+            int buttonID=R.string.open;
+
+            if (mimeType.startsWith("video")){
+                type="video/*";
+                alert.setTitle(R.string.video_file);
+                buttonID=R.string.playVideo;
+            }
             if (mimeType.startsWith("audio")){
-                buttonID= R.string.playAudio;
-                alert.setTitle(R.string.action_audio_delete_or_play);
+                type="audio/*";
+                alert.setTitle(R.string.audio_file);
+                buttonID=R.string.playAudio;
             }
             if (mimeType.startsWith("image")) {
-                buttonID= R.string.showImage;
-                alert.setTitle(R.string.action_image_delete_or_show);
+                type="image/*";
+                alert.setTitle(R.string.image_file);
             }
             if (mimeType.startsWith("application/pdf")) {
-                buttonID= R.string.openPDF;
-                alert.setTitle(R.string.action_pdf_delete_or_open);
+                type="application/pdf";
+                alert.setTitle(R.string.pdf_file);
             }
 
+            final String finalType = type;
             alert.setPositiveButton(buttonID, new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {
-                    String type="video/*";
-                    if ( mimeType.startsWith("video")) type="video/*";
-                    if ( mimeType.startsWith("audio")) type="audio/*";
-                    if ( mimeType.startsWith("image")) type="image/*";
-                    if ( mimeType.startsWith("application")) type="application/pdf";
-
                     try {
                         Intent intent = new Intent();
                         intent.setAction(Intent.ACTION_VIEW);
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                             Uri contentUri = getUriForFile(context, "com.olklein.choreo.fileProvider", new File(videoURI.getPath()));
-                            intent.setDataAndType(contentUri,type);
+                            intent.setDataAndType(contentUri, finalType);
                             intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
                             context.startActivity(Intent.createChooser(intent, mResources.getString(R.string.action_open_file)));
                         } else {
-                            intent.setDataAndType(Uri.fromFile(new File(videoURI.getPath())), type);
+                            intent.setDataAndType(Uri.fromFile(new File(videoURI.getPath())), finalType);
                             context.startActivity(Intent.createChooser(intent, mResources.getString(R.string.action_open_file)));
                         }
                     } catch (ActivityNotFoundException anfe) {
@@ -2157,9 +2155,8 @@ public class ListFragment extends Fragment {
             });
         }
 
-        alert.setNeutralButton(R.string.deleteVideo, new DialogInterface.OnClickListener() {
+        alert.setNeutralButton(R.string.remove, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int whichButton) {
-                // Delete
                 mItemArray.remove(pos);
                 if (mItemArray.size() == pos) listAdapter.setLastPosition(pos - 1);
                 listAdapter.notifyDataSetChanged();
@@ -2167,8 +2164,7 @@ public class ListFragment extends Fragment {
                 try {
                     String filePath = mExternalFilesDir + "/" + dance_file + "onscreen";
                     saveDanceFromPath(filePath);
-                    mItemArray.clear();
-                    if (listAdapter != null) listAdapter.notifyDataSetChanged();
+                    updateFragmentList();
                     loadDanceFromPath(filePath);
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -2180,7 +2176,8 @@ public class ListFragment extends Fragment {
         dialog.show();
     }
 
-    public static String getMimeType(Uri uri) {
+
+    private static String getMimeType(Uri uri) {
         String mimeType = null;
         String scheme = uri.getScheme();
         if (scheme!=null && scheme.equals(ContentResolver.SCHEME_CONTENT)) {
@@ -2213,7 +2210,6 @@ public class ListFragment extends Fragment {
         return mimeType;
     }
 
-
     public static String getTitle(Uri fileUri){
 
         MediaMetadataRetriever mdr = new MediaMetadataRetriever();
@@ -2235,14 +2231,7 @@ public class ListFragment extends Fragment {
     }
 
 
-//    public static Bitmap getThumbnail(Uri uri) {
-//        String mimeType = getMimeType(uri);
-//        return getThumbnail(uri, mimeType);
-//    }
-
     public static Bitmap getThumbnail(Uri fileUri, String mimeType){
-
-
         if (mimeType!=null && mimeType.startsWith("image")){
             return BitmapFactory.decodeFile(fileUri.getPath());
         }
@@ -2317,12 +2306,12 @@ public class ListFragment extends Fragment {
         return null;
     }
 
-    String mCurrentMediaFilePath;
-    String mCurrentMediaFileName;
+    private String mCurrentMediaFilePath;
+    private String mCurrentMediaFileName;
 
     private File createMediaFile(String ext) throws IOException {
         // Create a media file name
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss",Locale.getDefault()).format(new Date());
         String imageFileName = ext.toUpperCase(Locale.FRANCE) + "_" + timeStamp + "_";
         File storageDir = getActivity().getBaseContext().getExternalFilesDir(Environment.DIRECTORY_MOVIES);
         File image = File.createTempFile(
@@ -2343,5 +2332,371 @@ public class ListFragment extends Fragment {
         Uri contentUri = Uri.fromFile(f);
         mediaScanIntent.setData(contentUri);
         getActivity().getBaseContext().getApplicationContext().sendBroadcast(mediaScanIntent);
+    }
+
+    private void passportDialogOnClickListener(int id, final Context context, final int discipline) {
+        final AlertDialog.Builder alert = new AlertDialog.Builder(context);
+        final int danceID= id;
+        alert.setIcon(R.mipmap.ic_launcher);
+
+        alert.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                // Canceled.
+            }
+        });
+        int items = R.array.PassportColor;
+        int itemColors = R.array.PassportItemColors;
+        int itemBoxes =  R.array.PassportItemBoxes;
+
+        if (discipline==0){
+            alert.setTitle(R.string.action_show_passport_level);
+            if (danceID ==2) {
+                items = R.array.PassportColorFromPurple;
+                itemColors = R.array.PassportItemColorsFromPurple;
+                itemBoxes =  R.array.PassportItemBoxesFromPurple;
+            }
+            if (danceID ==3){
+                items = R.array.PassportColorFromGreen;
+                itemColors = R.array.PassportItemColorsFromGreen;
+                itemBoxes =  R.array.PassportItemBoxesFromGreen;
+            }
+            if (danceID ==4){
+                items = R.array.PassportColorFromOrange;
+                itemColors = R.array.PassportItemColorsFromOrange;
+                itemBoxes =  R.array.PassportItemBoxesFromOrange;
+            }
+        }
+        if (discipline==1){
+            alert.setTitle(R.string.action_show_passport_level);
+            if (danceID ==0){
+                items = R.array.PassportColorFromGreen;
+                itemColors = R.array.PassportItemColorsFromGreen;
+                itemBoxes =  R.array.PassportItemBoxesFromGreen;
+            }
+            if (danceID ==2){
+                items = R.array.PassportColorFromOrange;                                                    itemColors = R.array.PassportItemColorsFromPurple;
+                itemColors = R.array.PassportItemColorsFromOrange;
+                itemBoxes =  R.array.PassportItemBoxesFromOrange;
+            }
+            if (danceID ==3){
+                items = R.array.PassportColorFromPurple;
+                itemColors = R.array.PassportItemColorsFromPurple;
+                itemBoxes =  R.array.PassportItemBoxesFromPurple;
+            }
+        }
+        final int colors = itemColors;
+        final int boxes = itemBoxes;
+        final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String> (context, R.layout.passportcoloritem ) {
+            @Override
+            public View getView(int position, View convertView, ViewGroup parent) {
+                View view = super.getView(position, convertView, parent);
+                TextView text1 = (TextView) view.findViewById(android.R.id.text1);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+                    text1.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+                }
+                text1.setBackgroundResource(R.drawable.borderfilled);
+                String colorStr= context.getResources().getStringArray(colors)[position];
+
+                text1.setTextColor(Color.parseColor(colorStr));
+                {
+                    int resID = context.getResources().getIntArray(boxes)[position];
+
+                    switch (resID){
+                        case 1:
+                            text1.setCompoundDrawablesWithIntrinsicBounds(R.drawable.yellowbox,R.drawable.nobox,R.drawable.nobox,R.drawable.nobox);
+                            break;
+                        case 2:
+                            text1.setCompoundDrawablesWithIntrinsicBounds(R.drawable.orangebox,R.drawable.nobox,R.drawable.nobox,R.drawable.nobox);
+
+                            break;
+                        case 3:
+                            text1.setCompoundDrawablesWithIntrinsicBounds(R.drawable.greenbox,R.drawable.nobox,R.drawable.nobox,R.drawable.nobox);
+                            break;
+                        case 4:
+                            text1.setCompoundDrawablesWithIntrinsicBounds(R.drawable.purplebox,R.drawable.nobox,R.drawable.nobox,R.drawable.nobox);
+                            break;
+                        case 5:
+                            text1.setCompoundDrawablesWithIntrinsicBounds(R.drawable.bluebox,R.drawable.nobox,R.drawable.nobox,R.drawable.nobox);
+                            break;
+                        case 6:
+                            text1.setCompoundDrawablesWithIntrinsicBounds(R.drawable.redbox,R.drawable.nobox,R.drawable.nobox,R.drawable.nobox);
+                            break;
+                    }
+                }
+                return view;
+            }
+        };
+
+        for (String item :context.getResources().getStringArray(items))
+        {
+            arrayAdapter.add(item);
+        }
+        alert.setAdapter(arrayAdapter, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        show_passport(context, discipline,danceID, which);
+                    }
+                }
+        );
+
+        final AlertDialog dial = alert.create();
+        dial.show();
+
+    }
+
+    private void show_mediaContent(final Context context) {
+        ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
+        if (actionBar != null) {
+            actionBar.setTitle(context.getResources().getString(R.string.MultimediaContent));
+            actionBar.setDisplayHomeAsUpEnabled(true);
+            actionBar.setHomeButtonEnabled(true);
+            DrawerLayout mDrawerLayout = (DrawerLayout)  getActivity().findViewById(R.id.drawer_layout);
+            mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
+        }
+        isSyllabus=false;
+        isMediaFolder=true;
+        getActivity().invalidateOptionsMenu();
+
+        updateFragmentList();
+
+        File mHomeMovies =  context.getExternalFilesDir(Environment.DIRECTORY_MOVIES);
+        ArrayList<File> movieFileList = getFileList(mHomeMovies);
+        int contentNumber=0;
+
+        for (File movie : movieFileList) {
+            Uri contentUri = Uri.parse(movie.getAbsolutePath());
+            String[] content = {movie.getName(), "VideoURI-" + contentUri.toString(), movie.getName()};
+
+            mItemArray.add(listAdapter.getLastPosition() + 1, new DanceFigure(contentNumber++, content[0].trim(), content[1].trim(), content[2].trim()));
+            listAdapter.setLastPosition(listAdapter.getLastPosition() + 1);
+            listAdapter.notifyDataSetChanged();
+
+        }
+    }
+
+    public static void refresh_mediaContent(File mHomeMovies) {
+        updateFragmentList();
+
+        ArrayList<File> movieFileList = getFileList(mHomeMovies);
+        int contentNumber=0;
+
+        for (File movie : movieFileList) {
+            Uri contentUri = Uri.parse(movie.getAbsolutePath());
+            String[] content = {"", "VideoURI-" + contentUri.toString(), movie.getName()};
+
+            mItemArray.add(listAdapter.getLastPosition() + 1, new DanceFigure(contentNumber++, content[0].trim(), content[1].trim(), content[2].trim()));
+            listAdapter.setLastPosition(listAdapter.getLastPosition() + 1);
+            listAdapter.notifyDataSetChanged();
+
+        }
+    }
+
+    static private ArrayList<File> getFileList(File home){
+        ArrayList<File> fileList= new ArrayList<>();
+
+        if (null != home){
+            if (home.exists() && home.isDirectory()){
+                File[] listOfFiles = home.listFiles();
+                for (File file : listOfFiles) {
+                    if (!file.isDirectory()){
+                        fileList.add(file);
+                    }
+                }
+            }
+        }
+        return fileList;
+    }
+    private void doRefreshMenus(Context context, DrawerLayout drawer, String fileName, boolean mediaFolder) {
+        DanceCustomAdapter danceListAdapter =
+                new DanceCustomAdapter(context,
+                        R.layout.dance_custom_list,
+                        ChoreographerConstants.DANCE_LIST_FILENAME,
+                        drawer);
+        ListView drawerList = (ListView) getActivity().findViewById(R.id.left_drawer);
+        drawerList.setAdapter(danceListAdapter);
+        int index = ChoreographerConstants.getIndex(fileName);
+        if (index != -1) {
+            danceListAdapter.setClicked(index);
+            ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
+            if (actionBar != null) {
+                actionBar.setTitle(fileName);
+                actionBar.setDisplayHomeAsUpEnabled(true);
+                actionBar.setHomeButtonEnabled(true);
+                DrawerLayout mDrawerLayout = (DrawerLayout) getActivity().findViewById(R.id.drawer_layout);
+                mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
+            }
+            isSyllabus = false;
+            isMediaFolder = mediaFolder;
+        }
+
+        getActivity().invalidateOptionsMenu();
+    }
+
+
+    private boolean isMediaFolderEmpty(Context context) {
+        File mHomeMovies = context.getExternalFilesDir(Environment.DIRECTORY_MOVIES);
+        ArrayList<File> movieFileList = getFileList(mHomeMovies);
+        return movieFileList.isEmpty();
+    }
+
+    private static void clean_dialogOpen(final Context context) {
+        final AlertDialog.Builder alert = new AlertDialog.Builder(context);
+        alert.setIcon(R.mipmap.ic_launcher);
+        alert.setTitle(R.string.cleaning);
+        alert.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                // Canceled.
+            }
+        });
+
+        alert.setPositiveButton(R.string.remove, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                BkgCheckUnused cleaner = new BkgCheckUnused();
+                cleaner.setup(context);
+            }
+        });
+
+        final AlertDialog subDialog = alert.create();
+        subDialog.show();
+    }
+
+    private static void showUsage(final Context context, File home, final File movie) {
+
+        ArrayList<File> fileList = getFileList(home);
+
+        LayoutInflater li = LayoutInflater.from(context);
+        View promptsView = li.inflate(R.layout.contentusage_dialog, null);
+
+        final AlertDialog.Builder alert = new AlertDialog.Builder(context);
+        alert.setCancelable(true);
+        final ListView list = (ListView) promptsView.findViewById(R.id.list);
+        final TextView message1 = (TextView) promptsView.findViewById(R.id.message);
+        final TextView message2 = (TextView) promptsView.findViewById(R.id.message2);
+
+        alert.setIcon(R.mipmap.ic_launcher);
+
+
+        final ArrayAdapter<String> ChoreoListArrayAdapter = new ArrayAdapter<String> (context, android.R.layout.simple_list_item_1 ) {
+            @Override
+            public View getView(int position, View convertView, ViewGroup parent) {
+                View view = super.getView(position, convertView, parent);
+                TextView text1 = (TextView) view.findViewById(android.R.id.text1);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+                    text1.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
+                }
+                text1.setBackgroundResource(R.drawable.whiteborderfilled);
+                return view;
+            }
+        };
+
+        final String movieFileName = movie.getAbsolutePath();
+        for (File file : fileList) {
+            if(isFileContains(file,movieFileName))
+            {
+                String filename = file.getName();
+                if (filename.endsWith("onscreen")){
+                    if (filename.contains("onscreen")) {
+                        filename = filename.replace("onscreen", "").concat("*");
+                    }
+                }
+                ChoreoListArrayAdapter.add(filename);
+            }
+        }
+        alert.setTitle(R.string.details);
+        alert.setView(promptsView);
+        message1.setText(mResources.getString(R.string.UsedSize, humanReadableByteCount(movie.length())));
+
+        if (ChoreoListArrayAdapter.isEmpty()){
+            alert.setPositiveButton(R.string.close, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                }
+            });
+
+            alert.setNeutralButton(R.string.delete, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    movie.delete();
+                    final Notification.Builder mBuilder;
+                    final Resources mResources ;
+                    final NotificationManager mNotifyManager;
+                    final File mHome;
+                    final File mHomeMovies;
+
+                    NotificationUtils notification = new NotificationUtils(context);
+                    notification.createChannels();
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        mBuilder = new Notification.Builder(context,NotificationUtils.CHOREO_CHANNEL_ID);
+                    }else{
+                        mBuilder = new Notification.Builder(context);
+                    }
+                    mResources = context.getResources();
+                    mNotifyManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+                    mHome = context.getExternalFilesDir(null);
+                    mHomeMovies =  context.getExternalFilesDir(Environment.DIRECTORY_MOVIES);
+
+                    int color = mResources.getColor(android.R.color.holo_blue_light);
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        mBuilder.setContentTitle(mResources.getString(R.string.app_name))
+                                .setContentText(mResources.getString(R.string.contentDelete,movie.getName()))
+                                .setSmallIcon(android.R.drawable.ic_dialog_info)
+                                .setAutoCancel(true)
+                                .setColor(color);
+                    }else{
+                        mBuilder.setContentTitle(mResources.getString(R.string.app_name))
+                                .setContentText(mResources.getString(R.string.contentDelete,movie.getName()))
+                                .setSmallIcon(android.R.drawable.ic_dialog_info)
+                                .setAutoCancel(true);
+                    }
+
+                    if(mNotifyManager!=null) mNotifyManager.notify(1237, mBuilder.build());
+                    if (ListFragment.isMediaFolder()){
+                        ListFragment.refresh_mediaContent(mHomeMovies);
+                    }
+                }
+            });
+            message2.setText(mResources.getString(R.string.UseCleantosave, humanReadableByteCount(movie.length())));
+            list.setVisibility(View.GONE);
+
+        }else {
+            alert.setPositiveButton(R.string.close, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                }
+            });
+
+            message2.setText(R.string.UsedIn);
+            list.setAdapter(ChoreoListArrayAdapter);
+            list.setVisibility(View.VISIBLE);
+        }
+        final AlertDialog dialog = alert.create();
+        dialog.show();
+
+    }
+    private static boolean isFileContains(File file, String movieFileName)  {
+        InputStream inputStream;
+        try {
+            String filePath =file.getPath();
+            inputStream = new FileInputStream(filePath);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            return true;
+        }
+        final Scanner reader = new Scanner(inputStream, "ISO-8859-1");
+
+
+        while (reader.hasNextLine()) {
+            String line = reader.nextLine();
+
+            if(line.contains(movieFileName)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static String humanReadableByteCount(long bytes) {
+        int unit = 1024;
+        if (bytes < unit) return bytes + " B";
+        int exp = (int) (Math.log(bytes) / Math.log(unit));
+        String pre = ("KMGTPE").charAt(exp-1) + "" ;
+        return String.format("%.1f %sB", bytes / Math.pow(unit, exp), pre);
     }
 }

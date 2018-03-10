@@ -1,11 +1,12 @@
 package com.olklein.choreo;
 
+import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.res.Resources;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Environment;
-import android.support.v7.app.NotificationCompat;
 import android.util.Log;
 
 import java.io.File;
@@ -50,14 +51,20 @@ class BkgCheckUnused {
     }
 
     static class Clean extends AsyncTask<String, Void, String> {
-        final NotificationCompat.Builder mBuilder;
+        final Notification.Builder mBuilder;
         final Resources mResources ;
         final NotificationManager mNotifyManager;
         final File mHome;
         final File mHomeMovies;
 
         Clean(Context context) {
-            mBuilder = new NotificationCompat.Builder(context);
+            NotificationUtils mNotification = new NotificationUtils(context);
+            mNotification.createChannels();
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                mBuilder = new Notification.Builder(context,NotificationUtils.CHOREO_CHANNEL_ID);
+            }else{
+                mBuilder = new Notification.Builder(context);
+            }
             mResources = context.getResources();
             mNotifyManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
             mHome = context.getExternalFilesDir(null);
@@ -75,7 +82,7 @@ class BkgCheckUnused {
                     used = false;
                     if(isFileContains(file,movieFileName)){
                         used =true;
-                        Log.d("Choreo","This file will be removed: "+movieFileName);
+                        Log.d("Choreo","This file will not be removed: "+movieFileName);
                         break;
                     }
                 }
@@ -95,13 +102,23 @@ class BkgCheckUnused {
         protected void onPostExecute(String result) {
 
             int color = mResources.getColor(android.R.color.holo_blue_light);
-            mBuilder.setContentTitle(mResources.getString(R.string.app_name))
-                    .setContentText(mResources.getString(R.string.cleanupDone))
-                    .setSmallIcon(android.R.drawable.ic_dialog_info)
-                    .setAutoCancel(true)
-                    .setColor(color);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                mBuilder.setContentTitle(mResources.getString(R.string.app_name))
+                        .setContentText(mResources.getString(R.string.cleanupDone))
+                        .setSmallIcon(android.R.drawable.ic_dialog_info)
+                        .setAutoCancel(true)
+                        .setColor(color);
+            }else{
+                mBuilder.setContentTitle(mResources.getString(R.string.app_name))
+                        .setContentText(mResources.getString(R.string.cleanupDone))
+                        .setSmallIcon(android.R.drawable.ic_dialog_info)
+                        .setAutoCancel(true);
+            }
 
             if(mNotifyManager!=null) mNotifyManager.notify(1237, mBuilder.build());
+            if (ListFragment.isMediaFolder()){
+                ListFragment.refresh_mediaContent(mHomeMovies);
+            }
         }
 
     }
@@ -133,10 +150,7 @@ class BkgCheckUnused {
         ArrayList<File> fileList= new ArrayList<>();
 
         if (null != home){
-            if (home.exists()){
-                Log.d("Files", home.getAbsolutePath());
-            }
-            if (home.isDirectory()){
+            if (home.exists() && home.isDirectory()){
                 File[] listOfFiles = home.listFiles();
 
                 for (File file : listOfFiles) {

@@ -1,5 +1,6 @@
 package com.olklein.choreo;
 
+import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -11,7 +12,6 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
-import android.support.v7.app.NotificationCompat;
 
 import com.itextpdf.text.Annotation;
 import com.itextpdf.text.BadElementException;
@@ -28,10 +28,8 @@ import com.itextpdf.text.Phrase;
 import com.itextpdf.text.Rectangle;
 import com.itextpdf.text.pdf.BaseFont;
 import com.itextpdf.text.pdf.ColumnText;
-import com.itextpdf.text.pdf.PdfAnnotation;
 import com.itextpdf.text.pdf.PdfContentByte;
 import com.itextpdf.text.pdf.PdfPCell;
-import com.itextpdf.text.pdf.PdfPCellEvent;
 import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.pdf.PdfPageEventHelper;
 import com.itextpdf.text.pdf.PdfPageLabels;
@@ -81,7 +79,9 @@ class PDFCreator {
     private static final float bottom = 40;
 
 
-    public void createPdf(Context ctxt, String filePath, String title, boolean withComment, Drawable drawable, ArrayList<DanceFigure> items, FileOutputStream outFile) {
+    public void createPdf(Context ctxt, String filePath, String title, boolean withComment,
+                          Drawable drawable, ArrayList<DanceFigure> items,
+                          FileOutputStream outFile) {
         new GetResults(ctxt, withComment, drawable, items, outFile, filePath, title).execute();
     }
 
@@ -152,21 +152,6 @@ class PDFCreator {
             }
         }
     }
-    static class LinkInCell implements PdfPCellEvent {
-        protected String comment;
-        public LinkInCell(String comment) {
-            this.comment = comment;
-        }
-        public void cellLayout(PdfPCell cell, Rectangle position,
-                               PdfContentByte[] canvases) {
-            PdfWriter writer = canvases[0].getPdfWriter();
-
-            PdfAnnotation annotation =PdfAnnotation.createText(writer,position, "Comment",
-                    comment, false, "Note");
-
-            writer.addAnnotation(annotation);
-        }
-    }
 
     static class GetResults extends AsyncTask<String, Void, String> {
         final NotificationManager mNotifyManager;
@@ -175,11 +160,14 @@ class PDFCreator {
         final FileOutputStream outFile;
         final boolean withComment;
         final private ArrayList<DanceFigure> mItemArray;
-        final NotificationCompat.Builder mBuilder;
+        final Notification.Builder mBuilder;
 
-        GetResults(Context context, Boolean Comment, Drawable d, ArrayList<DanceFigure> items, FileOutputStream out, String filePath, String title){
+
+        GetResults(Context context, Boolean Comment, Drawable d, ArrayList<DanceFigure> items,
+                   FileOutputStream out, String filePath, String title){
             Resources mResources = context.getResources();
             mNotifyManager=(NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+            NotificationUtils mNotification = new NotificationUtils(context);
             filename = title;
             drawable = d;
             outFile = out;
@@ -193,7 +181,7 @@ class PDFCreator {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 fileURI = getUriForFile(context, "com.olklein.choreo.fileProvider", file);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
-                intent.setDataAndType(fileURI, "application/*");
+                intent.setDataAndType(fileURI, "application/pdf");
             }else{
                 fileURI= Uri.fromFile(file);
                 intent.setDataAndType(fileURI, "application/pdf");
@@ -202,16 +190,28 @@ class PDFCreator {
             intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_WRITE_URI_PERMISSION );
 
             PendingIntent pIntent = PendingIntent.getActivity(context, 0, intent, 0);
+            mNotification.createChannels();
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                mBuilder = new Notification.Builder(context,NotificationUtils.CHOREO_CHANNEL_ID);
+            }else{
+                mBuilder = new Notification.Builder(context);
+            }
 
-            mBuilder = new NotificationCompat.Builder(context);
             int color = mResources.getColor(android.R.color.holo_blue_light);
-            mBuilder.setContentTitle(mResources.getString(R.string.app_name))
-                    .setContentText(mResources.getString(R.string.pdf_file_uploaded,filename))
-                    .setSmallIcon(android.R.drawable.stat_sys_download_done)
-                    .setContentIntent(pIntent)
-                    .setAutoCancel(true)
-                    .setColor(color);
-
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                mBuilder.setContentTitle(mResources.getString(R.string.app_name))
+                        .setContentText(mResources.getString(R.string.pdf_file_uploaded,filename))
+                        .setSmallIcon(android.R.drawable.stat_sys_download_done)
+                        .setContentIntent(pIntent)
+                        .setAutoCancel(true)
+                        .setColor(color);
+            }else{
+                mBuilder.setContentTitle(mResources.getString(R.string.app_name))
+                        .setContentText(mResources.getString(R.string.pdf_file_uploaded,filename))
+                        .setSmallIcon(android.R.drawable.stat_sys_download_done)
+                        .setContentIntent(pIntent)
+                        .setAutoCancel(true);
+            }
         }
 
         @Override
@@ -247,7 +247,6 @@ class PDFCreator {
 
                 PdfPageLabels labels = new PdfPageLabels();
                 labels.addPageLabel(1, PdfPageLabels.DECIMAL_ARABIC_NUMERALS);
-
                 writer.setPageLabels(labels);
             }
             document.open();
@@ -255,7 +254,6 @@ class PDFCreator {
             PdfPTable table = new PdfPTable(60);
             table.setTotalWidth(document.getPageSize().getWidth());
             table.setWidthPercentage(100);
-
 
             for (DanceFigure item : mItemArray) {
                 PdfPCell cell = new PdfPCell();

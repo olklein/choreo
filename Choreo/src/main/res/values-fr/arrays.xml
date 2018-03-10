@@ -72,11 +72,18 @@
         <item name="Photo">Photographier</item>
         <item name="Capture">Filmer</item>
         <item name="Import">Importer\n(audio/video/image/pdf)</item>
-        <item name="Cleaning">Nettoyer</item>
     </string-array>
+    <string-array name="VideoCommands2">
+        <item name="Manage">Gérer\nle contenu multimédia</item>
+    </string-array>
+
     <string-array name="ImportExportCommands">
         <item name="Import">Importer\nune chorégraphie</item>
         <item name="Export">Exporter\ncette chorégraphie</item>
+    </string-array>
+    <string-array name="MediaManagementActions">
+        <item name="Clean">Nettoyer</item>
+        <item name="View">Afficher</item>
     </string-array>
 
 </resources>

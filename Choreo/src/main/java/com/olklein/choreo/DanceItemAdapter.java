@@ -29,8 +29,6 @@
 
 package com.olklein.choreo;
 
-import android.content.ContentResolver;
-import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
@@ -90,9 +88,9 @@ public class DanceItemAdapter extends DragItemAdapter<DanceFigure, DanceItemAdap
         mLayoutId = layoutId;
         mGrabHandleId = grabHandleId;
         setHasStableIds(true);
-        LostFileString = res.getString(R.string.action_video_lost);
-        LoadingFileString = res.getString(R.string.action_video_loadongoing);
-        UnreadableFileString = res.getString(R.string.action_video_unreadable);
+        LostFileString = res.getString(R.string.action_file_lost);
+        LoadingFileString = res.getString(R.string.action_loadongoing);
+        UnreadableFileString = res.getString(R.string.action_unsupported_format);
         mRes = res;
         mPictureSizeInPx = (int) dipToPixels(res,47);
 
@@ -172,7 +170,7 @@ public class DanceItemAdapter extends DragItemAdapter<DanceFigure, DanceItemAdap
             }
             else{
                 if (tmpFileExist) {
-                    holder.mName.setText(R.string.action_video_loadongoing);
+                    holder.mName.setText(R.string.action_loadongoing);
                     holder.mName.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_hourglass_empty_24x,R.drawable.nobox,R.drawable.nobox,R.drawable.nobox);
                     holder.mItemDrag.setImageResource(R.drawable.ic_broken_image_black_48px);
                 }else{ // !tmpFileExist && targetFileExist
@@ -191,8 +189,9 @@ public class DanceItemAdapter extends DragItemAdapter<DanceFigure, DanceItemAdap
                             holder.mName.setGravity(Gravity.CENTER_VERTICAL);
                             if (mimeType.startsWith("audio")) {
                                 holder.mItemDrag.setImageResource(R.drawable.ic_music_note_black_48px);
+                                String title=ListFragment.getTitle(uri);
                                 if (txtName.equals("")){
-                                    String title=ListFragment.getTitle(uri);
+                                    //String title=ListFragment.getTitle(uri);
                                     if (title!=null) {
                                         holder.mName.setText(" " +title);
                                     }else{
@@ -241,18 +240,46 @@ public class DanceItemAdapter extends DragItemAdapter<DanceFigure, DanceItemAdap
                                 }else{
                                     holder.mName.setText(txtComment);
                                 }
-                            }else{
-                                holder.mName.setGravity(Gravity.CENTER_VERTICAL);
-                                holder.mName.setCompoundDrawablesWithIntrinsicBounds(
-                                        R.drawable.ic_play_arrow_24x,
-                                        R.drawable.nobox,R.drawable.nobox,R.drawable.nobox);
-                                if (txtComment.equals("") && txtName.equals("")){
-                                    holder.mName.setText(R.string.clickToPlay);
-                                }else{
-                                    if (txtName.equals("")) {
-                                        holder.mName.setText(txtComment);
+                            }else {
+                                if (mimeType.startsWith("audio")) {
+                                    holder.mItemDrag.setImageResource(R.drawable.ic_music_note_black_48px);
+                                    holder.mName.setGravity(Gravity.CENTER_VERTICAL);
+                                    holder.mName.setCompoundDrawablesWithIntrinsicBounds(
+                                            R.drawable.ic_play_arrow_24x,
+                                            R.drawable.nobox, R.drawable.nobox, R.drawable.nobox);
+                                    if (txtName.equals("")){
+                                        String title=ListFragment.getTitle(uri);
+                                        if (title!=null) {
+                                            holder.mName.setText(" " +title);
+                                        }else{
+                                            holder.mName.setText(txtName);
+                                        }
                                     }else{
                                         holder.mName.setText(txtName);
+                                    }
+                                }else if (mimeType.startsWith("image")) {
+                                    holder.mItemDrag.setImageResource(R.drawable.ic_camera_roll_black_48px);
+                                    holder.mName.setCompoundDrawablesWithIntrinsicBounds(
+                                            R.drawable.ic_play_arrow_24x,
+                                            R.drawable.nobox, R.drawable.nobox, R.drawable.nobox);
+                                    if (!txtName.equals("")) {
+                                        holder.mName.setText(txtName);
+                                    }else{
+                                        holder.mName.setText(txtComment);
+                                    }
+                                }else{
+                                    holder.mName.setGravity(Gravity.CENTER_VERTICAL);
+                                    holder.mName.setCompoundDrawablesWithIntrinsicBounds(
+                                            R.drawable.ic_play_arrow_24x,
+                                            R.drawable.nobox,R.drawable.nobox,R.drawable.nobox);
+                                    if (txtComment.equals("") && txtName.equals("")){
+                                        holder.mName.setText(R.string.clickToPlay);
+                                    }else{
+                                        if (txtName.equals("")) {
+                                            holder.mName.setText(txtComment);
+                                        }else{
+                                            holder.mName.setText(txtName);
+                                        }
                                     }
                                 }
                             }
@@ -326,8 +353,5 @@ public class DanceItemAdapter extends DragItemAdapter<DanceFigure, DanceItemAdap
         File file = new File(path);
         return file.exists();
     }
-    private static boolean isReadable(String path){
-        File file = new File(path);
-        return file.canRead();
-    }
+
 }

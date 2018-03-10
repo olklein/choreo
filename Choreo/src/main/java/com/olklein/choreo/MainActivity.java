@@ -52,8 +52,10 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.autofill.AutofillManager;
 import android.widget.AdapterView;
 import android.widget.ListView;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -75,6 +77,14 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            AutofillManager afm = null;
+            afm = getSystemService(AutofillManager.class);
+            if (afm != null) {
+                afm.disableAutofillServices();
+            }
+        }
+
         setContentView(R.layout.activity_main_drawer);
         mActionBar = getSupportActionBar();
         mFragmentManager = getSupportFragmentManager();
@@ -292,7 +302,7 @@ public class MainActivity extends AppCompatActivity {
 
             ((DanceCustomAdapter)drawerList.getAdapter()).setClicked(position);
             drawer.closeDrawer(drawerList);
-       }
+        }
     }
 
     @Override
@@ -304,7 +314,25 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        openQuitDialog();
+        if (ListFragment.isMediaFolder()) {
+
+            DrawerLayout drawer =(DrawerLayout) findViewById(R.id.drawer_layout);
+            DanceCustomAdapter danceListAdapter =
+                    new DanceCustomAdapter(this,
+                            R.layout.dance_custom_list,
+                            ChoreographerConstants.DANCE_LIST_FILENAME,drawer);
+            ListView drawerList = (ListView) findViewById(R.id.left_drawer);
+
+            drawerList.setAdapter(danceListAdapter);
+            ListFragment fragment = new ListFragment();
+            fragment.setDrawer(drawer);
+
+            MainActivity.selectItem(fragment,-1,drawer,drawerList);
+            danceListAdapter.setClicked(currentItem);
+            ListFragment.setMediaFolder(false);
+        }else{
+            openQuitDialog();
+        }
     }
 
     private void openQuitDialog() {
@@ -330,12 +358,8 @@ public class MainActivity extends AppCompatActivity {
         ArrayList<String> fileList= new ArrayList<>();
 
         if (null != home){
-            if (home.exists()){
-                Log.d("Files", home.getAbsolutePath());
-            }
-            if (home.isDirectory()){
+            if (home.exists() && home.isDirectory()){
                 File[] listOfFiles = home.listFiles();
-
                 for (File file : listOfFiles) {
                     String filename = file.getName();
                     if (filename.endsWith("onscreen") &&  !file.isDirectory()){
@@ -355,19 +379,6 @@ public class MainActivity extends AppCompatActivity {
             saveItOrNotDialog(fileList);
         }else{
             removeEmptyFiles();
-            if (home!=null) ChoreographerConstants.init(home.getPath());
-            DrawerLayout drawer =(DrawerLayout) findViewById(R.id.drawer_layout);
-
-            DanceCustomAdapter danceListAdapter =
-                    new DanceCustomAdapter(this, R.layout.dance_custom_list,
-                            ChoreographerConstants.DANCE_LIST_FILENAME,drawer);
-
-            ListView drawerList = (ListView) findViewById(R.id.left_drawer);
-            drawerList.setAdapter(danceListAdapter);
-            setCurrentItem(0);
-            ListFragment fragment = new ListFragment();
-            fragment.setDrawer(drawer);
-            selectItem(fragment,0,drawer,drawerList);
             MainActivity.this.finishAffinity();
         }
     }
@@ -376,12 +387,8 @@ public class MainActivity extends AppCompatActivity {
         File home = this.getExternalFilesDir(null);
 
         ArrayList<String> fileList= new ArrayList<>();
-
         if (null != home) {
-            if (home.exists()) {
-                Log.d("Files", home.getAbsolutePath());
-            }
-            if (home.isDirectory()) {
+            if (home.exists() && home.isDirectory()) {
                 File[] listOfFiles = home.listFiles();
                 for (File file : listOfFiles) {
                     String filename = file.getName();
@@ -422,7 +429,7 @@ public class MainActivity extends AppCompatActivity {
             name = list.get(0);
             list.remove(0);
             final android.app.AlertDialog.Builder saveItOrNotDialog = new android.app.AlertDialog.Builder(this);
-            String title = getResources().getString(R.string.saveitornot) + " " + name.replace("onscreen", "");
+            String title = getResources().getString(R.string.save) + " " + name.replace("onscreen", "");
             saveItOrNotDialog.setTitle(title);
 
             // Save button: rename filenameOnScreen to filename.
@@ -458,21 +465,6 @@ public class MainActivity extends AppCompatActivity {
             saveItOrNotDialog.show();
         }else{
             removeEmptyFiles();
-            if (home!=null) ChoreographerConstants.init(home.getPath());
-
-            DrawerLayout drawer =(DrawerLayout) findViewById(R.id.drawer_layout);
-            DanceCustomAdapter danceListAdapter =
-                    new DanceCustomAdapter(MainActivity.this, R.layout.dance_custom_list,
-                            ChoreographerConstants.DANCE_LIST_FILENAME,drawer);
-            ListView drawerList = (ListView) findViewById(R.id.left_drawer);
-
-            drawerList.setAdapter(danceListAdapter);
-
-            setCurrentItem(0);
-            ListFragment fragment = new ListFragment();
-            fragment.setDrawer(drawer);
-
-            selectItem(fragment,0, drawer,drawerList);
             MainActivity.this.finishAffinity();
         }
     }

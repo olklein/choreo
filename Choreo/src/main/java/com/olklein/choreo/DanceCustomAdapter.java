@@ -52,7 +52,7 @@ import java.io.File;
 class DanceCustomAdapter extends ArrayAdapter<String> {
 
     private String[] listOfDance;
-    private final LayoutInflater inflator;
+    private final LayoutInflater inflater;
     private int checked;
     static final private String TAG ="DANCE";
     private static String mHomePath;
@@ -64,7 +64,7 @@ class DanceCustomAdapter extends ArrayAdapter<String> {
         setList(listOfDance);
         mHomePath = context.getExternalFilesDir(null).getPath();
         mDrawer = drawer;
-        inflator = LayoutInflater.from(context);
+        inflater = LayoutInflater.from(context);
         checked=0;
     }
 
@@ -82,11 +82,9 @@ class DanceCustomAdapter extends ArrayAdapter<String> {
     @Override
     public View getView(final int position, View convertView, @NonNull final ViewGroup parent) {
         View myView = convertView;
-        final Context context = getContext().getApplicationContext();
-
         ViewHolder holder;
         if(convertView == null){
-            myView = inflator.inflate(R.layout.dance_custom_list, parent, false);
+            myView = inflater.inflate(R.layout.dance_custom_list, parent, false);
             holder = new ViewHolder();
             holder.textViewName = (TextView) myView.findViewById(R.id.textViewName);
             holder.deleteButton = (AppCompatImageView) myView.findViewById(R.id.deleteItem);
@@ -95,6 +93,8 @@ class DanceCustomAdapter extends ArrayAdapter<String> {
         }else{
             holder = (ViewHolder)myView.getTag();
         }
+
+        final Context context = myView.getContext();
         holder.deleteButton.setBackgroundResource(R.drawable.buttonemptybackground);
         holder.deleteButton.setImageResource(R.drawable.ic_delete_forever_black_48px);
 
@@ -112,7 +112,7 @@ class DanceCustomAdapter extends ArrayAdapter<String> {
             public void onClick(View v) {
                 Log.d(TAG, "Clicked"+position);
                 AlertDialog.Builder builder;
-                builder = new AlertDialog.Builder(getContext());
+                builder = new AlertDialog.Builder(context);
                 builder
                         .setPositiveButton(R.string.OK, new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int id) {
@@ -136,11 +136,13 @@ class DanceCustomAdapter extends ArrayAdapter<String> {
                                 ListView drawerList = (ListView) parent.findViewById(R.id.left_drawer);
 
                                 drawerList.setAdapter(danceListAdapter);
-                                ListFragment fragment = new ListFragment();
-                                fragment.setDrawer(mDrawer);
+                                if (!ListFragment.isMediaFolder()) {
+                                    ListFragment fragment = new ListFragment();
+                                    fragment.setDrawer(mDrawer);
 
-                                MainActivity.selectItem(fragment,0,mDrawer,drawerList);
-                                danceListAdapter.setClicked(0);
+                                    MainActivity.selectItem(fragment, 0, mDrawer, drawerList);
+                                    danceListAdapter.setClicked(0);
+                                }
                             }
                         });
                 builder.setNegativeButton(R.string.cancel,
@@ -154,7 +156,11 @@ class DanceCustomAdapter extends ArrayAdapter<String> {
                 builder.setTitle(title);
                 builder.setIcon(R.mipmap.ic_launcher);
                 AlertDialog alert = builder.create();
-                alert.show();
+                try {
+                    alert.show();
+                }catch(Exception e){
+                    e.printStackTrace();
+                }
             }
         });
 
