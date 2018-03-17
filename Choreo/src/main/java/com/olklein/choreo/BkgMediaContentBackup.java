@@ -1,15 +1,19 @@
 package com.olklein.choreo;
 
+import android.Manifest;
+import android.app.DownloadManager;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
 import java.io.File;
@@ -50,8 +54,15 @@ import static android.support.v4.content.FileProvider.getUriForFile;
  */
 
 class BkgMediaContentBackup {
-    public void createCopy(Context ctxt, Uri uri, File dst, String filename) {
-        new GetResults(ctxt, uri, dst, filename).execute();
+
+    private static DownloadManager mDownloadManager;
+
+    public void createCopy(Context ctxt, Uri uri, File dst) {
+        new GetResults(ctxt, uri, dst).execute();
+    }
+
+    public static void initDownloadManager(Context ctxt) {
+        mDownloadManager = (DownloadManager) ctxt.getSystemService(Context.DOWNLOAD_SERVICE);
     }
 
     static class GetResults extends AsyncTask<String, Void, String> {
@@ -60,17 +71,16 @@ class BkgMediaContentBackup {
         final File mDst;
         final NotificationManager mNotifyManager;
         final Notification.Builder mBuilder ;
+        final String mimeType;
 
-
-        GetResults(Context context,Uri uri, File dst, String filename){
+        GetResults(Context context, Uri uri, File dst){
             mUri = uri;
             mDst = dst;
             mContentResolver = context.getContentResolver();
             Resources mResources = context.getResources();
             Uri fileURI;
 
-
-            final String mimeType = ListFragment.isMimeTypeValid(uri);
+            mimeType = ListFragment.isMimeTypeValid(uri);
             String type = "*/*";
             if (mimeType!=null) {
                 if (mimeType.startsWith("video")) type = "video/*";
@@ -95,7 +105,13 @@ class BkgMediaContentBackup {
             intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_WRITE_URI_PERMISSION );
 
             PendingIntent pIntent = PendingIntent.getActivity(context, 0, intent, 0);
-
+            if (mDownloadManager == null){
+                if(ContextCompat.checkSelfPermission(context, Manifest.permission.INTERNET) != PackageManager.PERMISSION_GRANTED) {
+                    MainActivity.requestPermission(context.getApplicationContext(), Manifest.permission.INTERNET, MainActivity.MYINTERNETREQUEST);
+                }else {
+                    initDownloadManager(context);
+                }
+            }
 
             mNotifyManager=(NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
             NotificationUtils mNotification = new NotificationUtils(context);
@@ -108,14 +124,14 @@ class BkgMediaContentBackup {
             int color = mResources.getColor(android.R.color.holo_blue_light);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 mBuilder.setContentTitle(mResources.getString(R.string.app_name))
-                        .setContentText(mResources.getString(R.string.backupcompleted,filename))
+                        .setContentText(mResources.getString(R.string.backupcompleted,mDst.getName()))
                         .setSmallIcon(android.R.drawable.stat_sys_download_done)
                         .setContentIntent(pIntent)
                         .setAutoCancel(true)
                         .setColor(color);
             }else{
                 mBuilder.setContentTitle(mResources.getString(R.string.app_name))
-                        .setContentText(mResources.getString(R.string.backupcompleted,filename))
+                        .setContentText(mResources.getString(R.string.backupcompleted,mDst.getName()))
                         .setSmallIcon(android.R.drawable.stat_sys_download_done)
                         .setContentIntent(pIntent)
                         .setAutoCancel(true);
@@ -138,8 +154,18 @@ class BkgMediaContentBackup {
 
         protected void onPostExecute(String result) {
             if (mNotifyManager != null){
-                mNotifyManager.notify(1335, mBuilder.build());
+                if (mDownloadManager ==null) mNotifyManager.notify(1335, mBuilder.build());
                 mNotifyManager.cancel(1334);
+            }
+            String filePath = mDst.getAbsolutePath();
+                    boolean isMediaScannerscannable = !mimeType.startsWith("application");
+            if (mDownloadManager!= null){
+                mDownloadManager.addCompletedDownload(mDst.getName(),
+                        "Choreo",
+                        isMediaScannerscannable,
+                        mimeType,
+                        filePath,
+                        mDst.length(),true);
             }
         }
         private void copy(Uri uri, File dst) throws IOException {

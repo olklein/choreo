@@ -1,10 +1,13 @@
 package com.olklein.choreo;
 
+import android.Manifest;
+import android.app.DownloadManager;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
@@ -12,6 +15,7 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
+import android.support.v4.content.ContextCompat;
 
 import com.itextpdf.text.Annotation;
 import com.itextpdf.text.BadElementException;
@@ -78,6 +82,7 @@ class PDFCreator {
     private static final float top = 50;
     private static final float bottom = 40;
 
+    private static DownloadManager mDownloadManager;
 
     public void createPdf(Context ctxt, String filePath, String title, boolean withComment,
                           Drawable drawable, ArrayList<DanceFigure> items,
@@ -152,10 +157,16 @@ class PDFCreator {
             }
         }
     }
+    public static void initDownloadManager(Context ctxt) {
+        //mDownloadManager = null;
+        mDownloadManager =(DownloadManager) ctxt.getSystemService(Context.DOWNLOAD_SERVICE);
+    }
+
 
     static class GetResults extends AsyncTask<String, Void, String> {
         final NotificationManager mNotifyManager;
         final String filename;
+        final String mFilePath;
         final Drawable drawable;
         final FileOutputStream outFile;
         final boolean withComment;
@@ -171,6 +182,7 @@ class PDFCreator {
             filename = title;
             drawable = d;
             outFile = out;
+            mFilePath = filePath;
             withComment = Comment;
             mItemArray = items;
 
@@ -200,17 +212,24 @@ class PDFCreator {
             int color = mResources.getColor(android.R.color.holo_blue_light);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 mBuilder.setContentTitle(mResources.getString(R.string.app_name))
-                        .setContentText(mResources.getString(R.string.pdf_file_uploaded,filename))
+                        .setContentText(mResources.getString(R.string.pdf_file_uploaded,new File(filePath).getName()))
                         .setSmallIcon(android.R.drawable.stat_sys_download_done)
                         .setContentIntent(pIntent)
                         .setAutoCancel(true)
                         .setColor(color);
             }else{
                 mBuilder.setContentTitle(mResources.getString(R.string.app_name))
-                        .setContentText(mResources.getString(R.string.pdf_file_uploaded,filename))
+                        .setContentText(mResources.getString(R.string.pdf_file_uploaded,new File(filePath).getName()))
                         .setSmallIcon(android.R.drawable.stat_sys_download_done)
                         .setContentIntent(pIntent)
                         .setAutoCancel(true);
+            }
+            if (mDownloadManager == null){
+               if(ContextCompat.checkSelfPermission(context, Manifest.permission.INTERNET) != PackageManager.PERMISSION_GRANTED) {
+                   MainActivity.requestPermission(context.getApplicationContext(), Manifest.permission.INTERNET, MainActivity.MYINTERNETREQUEST);
+               }else {
+                   initDownloadManager(context);
+               }
             }
         }
 
@@ -287,9 +306,6 @@ class PDFCreator {
                 cell.addElement(prg);
 
                 cell.setColspan(14);
-//                if (!item.getComment().equals("")&& !withComment){
-//                    cell.setCellEvent(new LinkInCell(item.getComment()));
-//                }
                 table.addCell(cell);
 
                 if (!item.getComment().equals("")&& withComment){
@@ -341,9 +357,20 @@ class PDFCreator {
 
         protected void onPostExecute(String result) {
             if (mNotifyManager != null){
-                mNotifyManager.notify(1235, mBuilder.build());
+                if (mDownloadManager ==null) mNotifyManager.notify(1235, mBuilder.build());
                 mNotifyManager.cancel(1234);
             }
+            if (mDownloadManager!= null){
+                File file = new File(mFilePath);
+                mDownloadManager.addCompletedDownload(file.getName(),
+                        "Choreo",
+                        false,
+                        "application/pdf",
+                        mFilePath,
+                        file.length(),true);
+            }
+
+
         }
     }
 }

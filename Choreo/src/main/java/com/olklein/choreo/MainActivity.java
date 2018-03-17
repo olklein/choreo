@@ -31,7 +31,8 @@
 package com.olklein.choreo;
 
 import android.Manifest;
-import android.annotation.TargetApi;
+import android.app.Activity;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
@@ -62,7 +63,7 @@ import java.util.Collections;
 import java.util.Comparator;
 
 public class MainActivity extends AppCompatActivity {
-
+    public static final int MYINTERNETREQUEST = 1969;
     private static final int MYWRITEREQUEST = 223;
     private static int currentItem = 0;
     private static CharSequence mTitle;
@@ -77,6 +78,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
             AutofillManager afm = null;
             afm = getSystemService(AutofillManager.class);
@@ -186,7 +188,6 @@ public class MainActivity extends AppCompatActivity {
         mDrawerToggle.onConfigurationChanged(newConfig);
     }
 
-    @TargetApi(23)
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -227,6 +228,12 @@ public class MainActivity extends AppCompatActivity {
                         actionBar.setDisplayUseLogoEnabled(true);
                         actionBar.setBackgroundDrawable(new ColorDrawable(ContextCompat.getColor(getApplicationContext(),R.color.app_color)));
                     }
+                }
+            }
+            break;
+            case MYINTERNETREQUEST: {
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    BkgMediaContentBackup.initDownloadManager(getApplicationContext());
                 }
             }
             break;
@@ -467,5 +474,15 @@ public class MainActivity extends AppCompatActivity {
             removeEmptyFiles();
             MainActivity.this.finishAffinity();
         }
+    }
+    public static void requestPermission(Context ctxt, String permission, int permissionRequestID){
+
+        if (ContextCompat.checkSelfPermission(ctxt, Manifest.permission.INTERNET) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions((Activity) ctxt.getApplicationContext(), new String[]{permission}, permissionRequestID);
+        }else {
+            BkgMediaContentBackup.initDownloadManager(ctxt.getApplicationContext());
+            PDFCreator.initDownloadManager(ctxt.getApplicationContext());
+        }
+
     }
 }

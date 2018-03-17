@@ -10,19 +10,19 @@
     <string name="cancel">Annuler</string>
     <string name="delete">Supprimer</string>
     <string name="duplicate">Copier la figure</string>
-    <string name="Figure_Editor">Figure:</string>
+    <string name="Figure_Editor">Figure :</string>
     <string name="save_as">Enregistrer sous</string>
-    <string name="Name">Nom:</string>
-    <string name="Rhythm">Rythme:</string>
-    <string name="Comment">Commentaire:</string>
+    <string name="Name">Nom :</string>
+    <string name="Rhythm">Rythme :</string>
+    <string name="Comment">Commentaire :</string>
     <string name="EnterRhythm">Entrer le rythme</string>
     <string name="EnterName">Entrer un nom</string>
-    <string name="FileName">Nom:</string>
+    <string name="FileName">Nom :</string>
     <string name="EnterComment">Entrer un commentaire</string>
     <string name="EnterFigure">Entrer une figure</string>
     <string name="pressHereToEdit">Cliquez pour modifier ou supprimer la figure</string>
     <string name="menu_cancel">Annuler</string>
-    <string name="button_confirm">Confirmer pour quitter?</string>
+    <string name="button_confirm">Confirmer pour quitter ?</string>
     <string name="menu_exit">Quitter</string>
     <string name="jive">Jive</string>
     <string name="slowWaltz">Valse Lente</string>
@@ -36,7 +36,7 @@
     <string name="dontsave">Ne pas enregistrer</string>
     <string name="drawer_close">Fermer</string>
     <string name="drawer_open">Ouvrir</string>
-    <string name="button_restore_confirm">Restaurer la précédente version?</string>
+    <string name="button_restore_confirm">Restaurer la précédente version ?</string>
     <string name="menu_restore">Restaurer</string>
     <string name="dragHandle">Drag handle</string>
     <string name="deleteButton">Supprimer</string>
@@ -59,7 +59,7 @@
     <string name="allDancesShort">Syll.</string>
     <string name="replace">Remplacer</string>
     <string name="UseThisIconToAddFigure">Ajouter une figure</string>
-    <string name="action_help">Recommandations utiles:</string>
+    <string name="action_help">Recommandations utiles :</string>
     <string name="UseThisIconToReset">Restaurer la version précédente</string>
     <string name="moveFigure">Déplacer une figure</string>
     <string name="UseThisIconToDelete">Supprimer une chorégraphie</string>
@@ -71,8 +71,8 @@
     <string name="mail_subjet">Choreo ("%s")</string>
     <string name="UseThisIconToCreateNewChoreo">Créer une nouvelle chorégraphie</string>
     <string name="action_saveaspdf">Télécharger en pdf</string>
-    <string name="pdf_file_uploaded">%s.pdf disponible.</string>
-    <string name="pdf_file_uploading">Préparation de %s.pdf</string>
+    <string name="pdf_file_uploaded">%s disponible.</string>
+    <string name="pdf_file_uploading">Préparation de %s</string>
     <string name="action_Licence_Logiciel">Licence logiciel</string>
     <string name="action_Licence_Logiciel_Info">Cette application est distribuée sous licence "Affero General Public License", version 3, publiée par la Free Software Foundation. Elle est disponible à l\'adresse suivante: &#13; https://github.com/olklein/choreo.</string>
     <string name="title_About">A propos</string>
@@ -92,7 +92,7 @@
     <string name="EnterTitle">Entrer un titre</string>
     <string name="Editer">Editer</string>
     <string name="Add_title">Ajouter un titre :</string>
-    <string name="action_unsupported_format">Format non supporté!</string>
+    <string name="action_unsupported_format">Format non supporté !</string>
     <string name="action_no_apps">Pas d\'application trouvée pour exécuter cette commande.</string>
     <string name="action_open_file">Ouvrir avec ?</string>
     <string name="playVideo">Regarder</string>
@@ -116,5 +116,6 @@
     <string name="close">Fermer</string>
     <string name="remove">Retirer</string>
     <string name="removeButton">Supprimer</string>
+    <string name="root_summary">Export de Choréo</string>
 
 </resources>

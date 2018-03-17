@@ -29,6 +29,7 @@ package com.olklein.choreo;
      then also delete it in the license file.
  */
 
+import android.app.Activity;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.ActivityNotFoundException;
@@ -49,6 +50,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.ParcelFileDescriptor;
 import android.os.SystemClock;
+import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.provider.OpenableColumns;
 import android.support.annotation.Nullable;
@@ -152,10 +154,13 @@ public class ListFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        File home = getActivity().getExternalFilesDir(null);
+        Activity mActivity = getActivity();
+        File home = mActivity.getExternalFilesDir(null);
 
-        mContentResolver = getActivity().getContentResolver();
-        mResources =getActivity().getResources();
+        mContentResolver = mActivity.getContentResolver();
+        mResources = mActivity.getResources();
+
+
         if (home!=null) {
             mExternalFilesDir = home.getPath();
         }
@@ -381,7 +386,6 @@ public class ListFragment extends Fragment {
             }
             case R.id.action_import_export: {
                 final Context context = getContext();
-
                 final AlertDialog.Builder  alert = new AlertDialog.Builder(context);
                 alert.setIcon(R.mipmap.ic_launcher);
                 alert.setTitle(R.string.action_import_export);
@@ -653,6 +657,8 @@ public class ListFragment extends Fragment {
             case R.id.action_saveaspdf:
             {
                 saveAsPDFDance(dance_file);
+//                activeContentProvider();
+
             }
             return true;
             case R.id.nav_Licence_Logiciel: {
@@ -940,12 +946,8 @@ public class ListFragment extends Fragment {
                                 }
                                 if (captureIntent.resolveActivity(context.getPackageManager()) != null) {
                                     File mediaFile = null;
-                                    try {
-                                        mediaFile = createMediaFile(extension);
-                                    } catch (IOException ex) {
-                                        // Error occurred while creating the File
-                                        ex.printStackTrace();
-                                    }
+                                    mediaFile = createMediaFile(extension);
+
                                     Uri contentURI;
                                     // Continue only if the File was successfully created
                                     if (mediaFile != null) {
@@ -1211,7 +1213,8 @@ public class ListFragment extends Fragment {
         if(!outDir.exists()){
             outDir.mkdirs();
         }
-        String filePath = downloadPath+"/"+file+".pdf";
+        String filename = Util.getNewName(file+".pdf",new File(downloadPath));
+        String filePath = downloadPath+"/"+filename;
         saveDanceAsPDFFromPath(getContext(), file, filePath);
     }
 
@@ -1245,17 +1248,17 @@ public class ListFragment extends Fragment {
             int color = resources.getColor(android.R.color.holo_blue_light);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 mBuilder.setContentTitle(resources.getString(R.string.app_name))
-                        .setContentText(resources.getString(R.string.pdf_file_uploading,dance_file))
+                        .setContentText(resources.getString(R.string.pdf_file_uploading,new File(filePath).getName()))
                         .setSmallIcon(android.R.drawable.stat_sys_download)
                         .setAutoCancel(false)
                         .setColor(color);
             }else{
                 mBuilder.setContentTitle(resources.getString(R.string.app_name))
-                        .setContentText(resources.getString(R.string.pdf_file_uploading,dance_file))
+                        .setContentText(resources.getString(R.string.pdf_file_uploading,new File(filePath).getName()))
                         .setSmallIcon(android.R.drawable.stat_sys_download)
                         .setAutoCancel(false);
             }
-            //if (mNotifyManager!=null) mNotifyManager.notify(1234, mBuilder.build());
+
             if (mNotifyManager!=null) mNotifyManager.notify(1234, mBuilder.build());
         }
     }
@@ -1630,11 +1633,28 @@ public class ListFragment extends Fragment {
         }
     }
 
-    private String cleanFileName(String shortDisplayName) {
+    private static String cleanFileName(String shortDisplayName) {
         shortDisplayName = shortDisplayName.replaceAll("%","");
         shortDisplayName = shortDisplayName.replaceAll("\\[","");
         shortDisplayName = shortDisplayName.replaceAll("\\]","");
         shortDisplayName = shortDisplayName.replaceAll("\\?","");
+        shortDisplayName = shortDisplayName.replaceAll( "à", "a");
+        shortDisplayName = shortDisplayName.replaceAll( "â", "a");
+        shortDisplayName = shortDisplayName.replaceAll( "ç", "c");
+        shortDisplayName = shortDisplayName.replaceAll( "è", "e");
+        shortDisplayName = shortDisplayName.replaceAll( "é", "e");
+        shortDisplayName = shortDisplayName.replaceAll( "ê", "e");
+        shortDisplayName = shortDisplayName.replaceAll( "ë", "e");
+        shortDisplayName = shortDisplayName.replaceAll( "ï", "i");
+        shortDisplayName = shortDisplayName.replaceAll( "î", "i");
+        shortDisplayName = shortDisplayName.replaceAll( "ö", "o");
+        shortDisplayName = shortDisplayName.replaceAll( "ô", "o");
+        shortDisplayName = shortDisplayName.replaceAll( "ü", "u");
+        shortDisplayName = shortDisplayName.replaceAll( "û", "u");
+        shortDisplayName = shortDisplayName.replaceAll( "ù", "u");
+        shortDisplayName = shortDisplayName.replaceAll("\"","");
+        shortDisplayName = shortDisplayName.replace("~","");
+
         return shortDisplayName;
     }
 
@@ -1963,7 +1983,7 @@ public class ListFragment extends Fragment {
         alert.show();
     }
 
-    public static void openMediaContentItemDialog(final View view, final int pos, final Uri videoURI) {
+    private static void openMediaContentItemDialog(final View view, final int pos, final Uri videoURI) {
         final Context context = view.getContext();
         final AlertDialog.Builder alert = new AlertDialog.Builder(context);
         alert.setIcon(R.mipmap.ic_launcher);
@@ -2022,8 +2042,6 @@ public class ListFragment extends Fragment {
                 public void onClick(DialogInterface dialog, int whichButton) {
                     // Backup
                     File contentFile = new File(videoURI.getPath());
-                    Resources mResources = context.getResources();
-                    int color = mResources.getColor(android.R.color.holo_blue_light);
                     File home = new File(mExternalFilesDir, "");
                     showUsage(context,home,contentFile);
                 }
@@ -2046,7 +2064,8 @@ public class ListFragment extends Fragment {
                 if(!outDir.exists()){
                     outDir.mkdirs();
                 }
-                String filePath = downloadPath+"/"+contentFile.getName();
+                String fileName = Util.getNewName(contentFile.getName(),new File(downloadPath));
+                String filePath = downloadPath+"/"+fileName;
                 File dest = new File(filePath);
 
                 BkgMediaContentBackup backup = new BkgMediaContentBackup();
@@ -2078,7 +2097,7 @@ public class ListFragment extends Fragment {
                 }
                 if (mNotifyManager!=null) mNotifyManager.notify(1334, mBuilder.build());
 
-                backup.createCopy(context, Uri.fromFile(new File(videoURI.getPath())),dest,contentFile.getName());
+                backup.createCopy(context, Uri.fromFile(new File(videoURI.getPath())),dest);
             }
         });
 
@@ -2186,22 +2205,18 @@ public class ListFragment extends Fragment {
             String name;
             name=uri.toString();
             name=name.replaceAll(" ","");
-            name=name.replaceAll("\\[","(");
-            name=name.replaceAll("\\]",")");
             name=name.replaceAll("'","");
             name=name.replaceAll("&","");
-            name=name.replaceAll("\"","");
-            name=name.replace("?","");
-            name=name.replace("~","");
+            name=cleanFileName(name);
 
             String fileExtension = MimeTypeMap.getFileExtensionFromUrl(name).toLowerCase();
-            if (fileExtension.equals("flv")) return ("video/x-flv");
-            if (fileExtension.equals("mov")) return ("video/quicktime") ;
-            if (fileExtension.equals( "wm")) return ("video/x-ms-wm");
-            if (fileExtension.equals( "wmv")) return ("video/x-ms-wmv");
-            if (fileExtension.equals( "wmx")) return ("video/x-ms-wmx");
-            if (fileExtension.equals( "wvx")) return ("video/x-ms-wvx");
-            if (fileExtension.equals( "avi")) return ("video/x-msvideo");
+            if (fileExtension.equals( "flv" ))  return ("video/x-flv");
+            if (fileExtension.equals( "mov" ))  return ("video/quicktime") ;
+            if (fileExtension.equals( "wm"  ))  return ("video/x-ms-wm");
+            if (fileExtension.equals( "wmv" ))  return ("video/x-ms-wmv");
+            if (fileExtension.equals( "wmx" ))  return ("video/x-ms-wmx");
+            if (fileExtension.equals( "wvx" ))  return ("video/x-ms-wvx");
+            if (fileExtension.equals( "avi" ))  return ("video/x-msvideo");
             if (fileExtension.equals("movie")) return ("video/x-sgi-movie");
 
             mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileExtension);
@@ -2274,34 +2289,29 @@ public class ListFragment extends Fragment {
         File fileIn = new File(uri.getPath());
         PdfRenderer.Page mCurrentPage;
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-
             ParcelFileDescriptor mFileDescriptor = null;
             PdfRenderer mPdfRenderer = null;
             try {
                 mFileDescriptor = ParcelFileDescriptor.open(fileIn, ParcelFileDescriptor.MODE_READ_ONLY);
-                try {
-                    mPdfRenderer = new PdfRenderer(mFileDescriptor);
-                } catch (IOException e) {
-                    e.printStackTrace();
+                mPdfRenderer = new PdfRenderer(mFileDescriptor);
+
+
+                if (mPdfRenderer == null) {
+                    return null;
                 }
+                mCurrentPage = mPdfRenderer.openPage(0);
 
-            } catch (FileNotFoundException e) {
+                float h;
+                h = (float) (1024*(float)mCurrentPage.getHeight()/(float)mCurrentPage.getWidth());
+                Bitmap bitmap = createBitmap((int) 1024, (int) h, Bitmap.Config.ARGB_8888);
+                bitmap.eraseColor(0xffFFFFFF);
+                mCurrentPage.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY);
+
+                return bitmap;
+            } catch (Exception e) {
                 e.printStackTrace();
-            }
-
-            if (mPdfRenderer == null) {
                 return null;
             }
-            mCurrentPage = mPdfRenderer.openPage(0);
-
-            float h;
-            h = (float) (1024*(float)mCurrentPage.getHeight()/(float)mCurrentPage.getWidth());
-            Bitmap bitmap = createBitmap((int) 1024, (int) h, Bitmap.Config.ARGB_8888);
-            bitmap.eraseColor(0xffFFFFFF);
-            mCurrentPage.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY);
-
-            return bitmap;
-
         }
         return null;
     }
@@ -2309,16 +2319,12 @@ public class ListFragment extends Fragment {
     private String mCurrentMediaFilePath;
     private String mCurrentMediaFileName;
 
-    private File createMediaFile(String ext) throws IOException {
+    private File createMediaFile(String ext) {
         // Create a media file name
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss",Locale.getDefault()).format(new Date());
-        String imageFileName = ext.toUpperCase(Locale.FRANCE) + "_" + timeStamp + "_";
+        String imageFileName = ext.toUpperCase(Locale.FRANCE) + "_" + timeStamp;
         File storageDir = getActivity().getBaseContext().getExternalFilesDir(Environment.DIRECTORY_MOVIES);
-        File image = File.createTempFile(
-                imageFileName,  /* prefix */
-                "."+ext,   /* suffix */
-                storageDir      /* directory */
-        );
+        File image = new File(storageDir+"/"+imageFileName+"."+ext);
 
         // Save a file: path for use with ACTION_VIEW intents
         mCurrentMediaFilePath = image.getAbsolutePath();
@@ -2692,11 +2698,58 @@ public class ListFragment extends Fragment {
         return false;
     }
 
-    public static String humanReadableByteCount(long bytes) {
+    private static String humanReadableByteCount(long bytes) {
         int unit = 1024;
         if (bytes < unit) return bytes + " B";
         int exp = (int) (Math.log(bytes) / Math.log(unit));
         String pre = ("KMGTPE").charAt(exp-1) + "" ;
         return String.format("%.1f %sB", bytes / Math.pow(unit, exp), pre);
     }
+
+    private static String getRythm(String filePath) throws IOException {
+        InputStream inputStream = new FileInputStream(filePath);
+        final Scanner reader = new Scanner(inputStream, "ISO-8859-1");
+        String rythm="";
+        try {
+            String line;
+
+            while (reader.hasNextLine()) {
+                line = reader.nextLine();
+                String[] strings = TextUtils.split(line, ";");
+                if (strings.length > 2) {
+                    if (!strings[2].contains("VideoURI-")) {
+                        rythm=rythm.concat(strings[2].replaceAll("<br>", ""));
+                    }
+                }
+            }
+        } finally {
+            reader.close();
+        }
+        return rythm;
+    }
+    private static void displayChoreoLength(Context context, String file) throws IOException {
+        String filePath=mExternalFilesDir+"/"+file;
+        File testFile= new File(filePath+"onscreen");
+        if (testFile.exists()){
+            filePath=filePath+"onscreen";
+        }
+
+        int[] info = Util.ChoreoLength(getRythm(filePath));
+        Toast.makeText(context, "S: "+ info[0]+"Q: "+ info[1]+"beats: "+ info[2]+"total beats: "+ info[3], Toast.LENGTH_LONG).show();
+    }
+
+    private static final String AUTHORITY = "com.olklein.choreo.contentProvider.mediaContent";
+    void activeContentProvider(){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            getActivity().getContentResolver().notifyChange(DocumentsContract.buildRootsUri
+                    (AUTHORITY), null, false);
+        }
+        // END_INCLUDE(notify_change)
+    }
+
+
+
+
+
+
 }

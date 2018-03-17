@@ -13,7 +13,7 @@ public class NotificationUtils extends ContextWrapper {
 
     private NotificationManager mManager;
     public static final String CHOREO_CHANNEL_ID = "com.olklein.choreo";
-    public static final String CHOREO_CHANNEL_NAME = "CHOERO CHANNEL";
+    private static final String CHOREO_CHANNEL_NAME = "CHOREO CHANNEL";
 
     public NotificationUtils(Context base) {
         super(base);
