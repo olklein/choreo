@@ -2533,6 +2533,7 @@ public class ListFragment extends Fragment {
             }
             isSyllabus = false;
             isMediaFolder = mediaFolder;
+            MainActivity.setCurrentItem(index);
         }
 
         getActivity().invalidateOptionsMenu();
